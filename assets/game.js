@@ -4,65 +4,72 @@ tileSet.src = "assets/img/tileset10x10.png";
 var options = {
     layout: "tile",
     bg: "black",
-    tileWidth: 64,
-    tileHeight: 64,
+    tileWidth: 10,
+    tileHeight: 10,
     tileSet: tileSet,
     tileMap: {
-        "@": [0, 0],
-        "#": [0, 10],
-        "a": [10, 0],
-        "!": [10, 10]
+        "@": [0, 10]
     },
     width: 80,
-    height: 24
+    height: 60
+}
+
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
+class Player {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    move(xDelta, yDelta) {
+        this.x = clamp(this.x+xDelta, 0, options.width-1)
+        this.y = clamp(this.y+yDelta, 0, options.height-1)
+    }
+
+    display(display) {
+        display.draw(this.x, this.y, "@", 'white', 'black');
+    }
 }
 
 var Game =  {
-    _display: null,
-    _currentScreen: null, 
+    display: null,
+    player: new Player(options.width/2, options.height/2),
+
     init: function() {
-        // Any necessary initialization will go here.
-        this._display = new ROT.Display(options);
-        // Create a helper function for binding to an event
-        // and making it send it to the screen
-        var game = this; // So that we don't lose this
+        this.display = new ROT.Display(options);
+
+        var game = this; 
         var bindEventToScreen = function(event) {
             window.addEventListener(event, function(e) {
-                // When an event is received, send it to the
-                // screen if there is one
-                if (game._currentScreen !== null) {
-                    // Send the event type and data to the screen
-                    game._currentScreen.handleInput(event, e);
-                }
+                game.handleInput(event, e);
             });
         }
-        // Bind keyboard input events
         bindEventToScreen('keydown');
         bindEventToScreen('keyup');
         bindEventToScreen('keypress');
+
+        this.player.display(this.display);
     },
-    getDisplay: function() {
-        return this._display;
-    },
-    switchScreen: function(screen) {
-        // If we had a screen before, notify it that we exited
-        if (this._currentScreen !== null) {
-            this._currentScreen.exit();
-        }
-        // Clear the display
-        this.getDisplay().clear();
-        // Update our current screen, notify it we entered
-        // and then render it
-        this._currentScreen = screen;
-        if (!this._currentScreen !== null) {
-            this._currentScreen.enter();
-            this._currentScreen.render(this._display);
-        }
+    handleInput: function(inputType, inputData) {
+        if (inputType === 'keydown') {
+            // Movement
+            if (inputData.keyCode === ROT.KEYS.VK_LEFT) {
+                this.player.move(-1, 0);
+            } else if (inputData.keyCode === ROT.KEYS.VK_RIGHT) {
+                this.player.move(1, 0);
+            } else if (inputData.keyCode === ROT.KEYS.VK_UP) {
+                this.player.move(0, -1);
+            } else if (inputData.keyCode === ROT.KEYS.VK_DOWN) {
+                this.player.move(0, 1);
+            }
+            this.display.clear();
+			this.player.display(this.display);
+        } 
     }
 }
 
 window.onload = function() {
     Game.init();
-    document.body.appendChild(Game.getDisplay().getContainer());
-    Game.switchScreen(Game.Screen.startScreen);
-}
+    document.body.appendChild(Game.display.getContainer());
+};
