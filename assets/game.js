@@ -12,8 +12,8 @@ window.onload = function() {
     var display = new ROT.Display(options);
     var map = new GameMap(options.width, options.height);
     var eventHandler = new EventHandler();
-    var player = new Entity(options.width/2, options.height/2, "@", 'white', 'black');
-    var engine = new Engine(map, player, [new Entity(20, 20, 'a', 'white', 'black')], eventHandler, display);
+    var player = new Entity(map.randomPosition(), "@", 'white', 'black');
+    var engine = new Engine(map, player, [new Entity(map.randomPosition(), 'a', 'white', 'black')], eventHandler, display);
 
     var bindEventToScreen = function(event) {
         window.addEventListener(event, function(e) {

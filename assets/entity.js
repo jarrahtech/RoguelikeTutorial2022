@@ -1,8 +1,8 @@
 
 export class Entity {
-    constructor(x, y, glyph, fg, bg) {
-        this.x = x
-        this.y = y
+    constructor(pos, glyph, fg, bg) {
+        this.x = pos[0]
+        this.y = pos[1]
         this.glyph = glyph
         this.fg = fg
         this.bg = bg

@@ -16,15 +16,22 @@ export class Tile {
 }
 
 export var floor = new Tile(" ", 'white', 'black', true, true)
-export var wall = new Tile(" ", 'grey', 'grey', false, false)
+export var wall = new Tile(" ", 'white', 'grey', false, false)
+export var door = new Tile(" ", 'white', 'red', false, false)
 
 export class GameMap {
 
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.tiles = Array.from(Array(width), () => new Array(height).fill(floor));
-        this.tiles[20][3] = wall;
+        this.map = new ROT.Map.Digger(width, height);
+        this.tiles = Array.from(Array(width), () => new Array(height).fill(wall));
+
+        this.map.create((x, y, value) => {
+            if (value === 0) {
+                this.tiles[x][y] = floor;
+            }
+        });
     }
 
     inBounds(x, y) {
@@ -37,5 +44,15 @@ export class GameMap {
                 this.tiles[x][y].render(display, x, y);
             }
         }
+    }
+
+    randomPosition() {
+        var rooms = this.map.getRooms();
+        var room = rooms[this.randInt(0, rooms.length)];
+        return [this.randInt(room.getLeft(), room.getRight()), this.randInt(room.getTop(), room.getBottom())];
+    }
+
+    randInt(min, max) {
+        return Math.floor(ROT.RNG.getUniform() * (max - min + 1) + min);
     }
 }
