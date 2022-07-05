@@ -13,6 +13,11 @@ export class MoveAction extends Action {
     }
 
     perform(engine, entity) {
-        entity.move(this.xDelta, this.yDelta);
+        var x = entity.x + this.xDelta;
+        var y = entity.y + this.yDelta;
+
+        if (engine.gameMap.inBounds(x, y) && engine.gameMap.tiles[x][y].walkable) {
+            entity.move(this.xDelta, this.yDelta);
+        }
     }
 }
