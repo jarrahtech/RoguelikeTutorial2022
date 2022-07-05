@@ -1,5 +1,7 @@
 import { Entity } from './entity.js';
 import { EventHandler } from './eventHandler.js';
+import { Engine } from './engine.js';
+import { GameMap } from './map.js';
 
 var tileSet = document.createElement("img");
 tileSet.src = "assets/img/tileset10x10.png";
@@ -12,42 +14,30 @@ var options = {
     tileSet: tileSet,
     tileMap: {
         " ": [0, 0],
+        "a": [0, 40],
         "@": [0, 10]
     },
     width: 80,
     height: 60
 }
 
-var Game =  {
-    display: null,
-    player: new Entity(options.width/2, options.height/2, '@', 'white', 'black'),
-    eventHandler: new EventHandler(),
-
-    init: function() {
-        this.display = new ROT.Display(options);
-
-        var game = this; 
-        var bindEventToScreen = function(event) {
-            window.addEventListener(event, function(e) {
-                game.handleInput(event, e);
-            });
-        }
-        bindEventToScreen('keydown');
-        bindEventToScreen('keyup');
-        bindEventToScreen('keypress');
-
-        this.player.display(this.display);
-    },
-    handleInput: function(inputType, inputData) {
-        var action = this.eventHandler.dispatch(inputType, inputData);
-        action.perform(null, this.player);
-        
-        this.display.clear();
-        this.player.display(this.display);
-    }
-}
-
 window.onload = function() {
-    Game.init();
-    document.body.appendChild(Game.display.getContainer());
+    var display = new ROT.Display(options);
+    var map = new GameMap();
+    var eventHandler = new EventHandler();
+    var player = new Entity(options.width/2, options.height/2, '@', 'white', 'black');
+    var engine = new Engine(map, player, [new Entity(20, 20, 'a', 'white', 'black')], eventHandler, display);
+
+    var bindEventToScreen = function(event) {
+        window.addEventListener(event, function(e) {
+            engine.handleInput(event, e);
+        });
+    }
+    bindEventToScreen('keydown');
+    bindEventToScreen('keyup');
+    bindEventToScreen('keypress');
+
+    document.body.appendChild(display.getContainer());
+
+    engine.render();
 };
