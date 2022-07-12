@@ -16,7 +16,7 @@ export class MoveAction extends Action {
         var x = entity.x + this.xDelta;
         var y = entity.y + this.yDelta;
 
-        if (engine.gameMap.inBounds(x, y) && engine.gameMap.tiles[x][y].walkable) {
+        if (engine.gameMap.inBounds(x, y) && engine.gameMap.tiles[x][y].type.walkable) {
             entity.move(this.xDelta, this.yDelta);
         }
     }

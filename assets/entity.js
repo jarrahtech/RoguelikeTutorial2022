@@ -13,7 +13,9 @@ export class Entity {
         this.y += yDelta
     }
 
-    render(display) {
-        display.draw(this.x, this.y, this.glyph, this.fg, this.bg);
+    render(display, gameMap) {
+        if (gameMap.isVisible(this.x, this.y)) {
+            display.draw(this.x, this.y, this.glyph, this.fg, this.bg);
+        }
     }
 }

@@ -16,8 +16,9 @@ export class Engine {
 
     render() {
         this.display.clear();
+        this.gameMap.updateFov(this.player);
         this.gameMap.render(this.display);
-        this.player.render(this.display);
-        this.entities.forEach((e, i) => e.render(this.display));
+        this.player.render(this.display, this.gameMap);
+        this.entities.forEach((e, i) => e.render(this.display, this.gameMap));
     }
 }
