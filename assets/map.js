@@ -1,3 +1,4 @@
+import { Entity } from './entity.js';
 
 export class TileDisplay {
     constructor(glyph, fg, bg) {
@@ -31,10 +32,10 @@ export class TileType {
     }
 }
 
-export var inLightColor = '#ffff0080';
-export var rememberColor = '#777777aa';
-export var wallColor = '#ccccccff'
-export var unseenColor = 'black'
+var inLightColor = '#ffff0080';
+var rememberColor = '#777777aa';
+var wallColor = '#ccccccff'
+var unseenColor = 'black'
 
 var floor = new TileType(new TileDisplay(" ", unseenColor, inLightColor), new TileDisplay(" ", unseenColor, rememberColor), new TileDisplay(" ", unseenColor, unseenColor), true, true)
 var wall = new TileType(new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, unseenColor), false, false)
@@ -70,7 +71,26 @@ export class GameMap {
         this.map.create((x, y, value) => {
             this.tiles[x][y] = new Tile((value === 0)?floor:wall);
         });
+        this.player = new Entity("Player", this.randomPosition(), "@", 'white', inLightColor, true);
+        this.entities = [];
+        this.placeEntities(2);   
         this.fov = new ROT.FOV.PreciseShadowcasting(this.isTransparent.bind(this), { topology: 8 });
+    }
+
+    placeEntities(maxPerRoom) {
+        var monsters = {
+            "orc": 4,
+            "troll": 1
+        }
+
+        this.map.getRooms().forEach(r => {
+            for (var i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
+                switch(ROT.RNG.getWeightedValue(monsters)) {
+                    case "orc": this.entities.push(new Entity("Orc", this.randomRoomPosition(r), 'o', 'white', inLightColor, true)); break;
+                    case "troll": this.entities.push(new Entity("Troll", this.randomRoomPosition(r), 't', 'white', inLightColor, true)); break;
+                }
+            }
+        });
     }
 
     inBounds(x, y) {
@@ -83,6 +103,16 @@ export class GameMap {
 
     isTransparent(x, y) {
         return this.inBounds(x, y) && this.tiles[x][y].type.transparent;
+    }
+
+    blockingEntityAt(x, y) {
+        for (var i=0; i<this.entities.length; i++) {
+            var entity = this.entities[i];
+            if (entity.blocker && entity.x===x && entity.y===y) {
+                return entity;
+            }
+        }
+        return null;
     }
 
     clearFov() {
@@ -101,17 +131,22 @@ export class GameMap {
     }
 
     render(display) {
+        this.updateFov(this.player);
         for (var x=0; x<this.width; x++) {
             for (var y=0; y<this.height; y++) {
                 this.tiles[x][y].render(display, x, y);
             }
         }
+        this.player.render(display, this);
+        this.entities.forEach((e, i) => e.render(display, this));
     }
 
     randomPosition() {
         var rooms = this.map.getRooms();
-        var idx = this.randInt(0, rooms.length-1);
-        var room = rooms[idx];
+        return this.randomRoomPosition(rooms[this.randInt(0, rooms.length-1)]);
+    }
+
+    randomRoomPosition(room) {
         return [this.randInt(room.getLeft(), room.getRight()), this.randInt(room.getTop(), room.getBottom())];
     }
 

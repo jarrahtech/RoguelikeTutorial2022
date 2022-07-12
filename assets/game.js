@@ -1,7 +1,6 @@
-import { Entity } from './entity.js';
 import { EventHandler } from './eventHandler.js';
 import { Engine } from './engine.js';
-import { GameMap, inLightColor } from './map.js';
+import { GameMap } from './map.js';
 
 var options = {
     width: 80,
@@ -12,8 +11,7 @@ window.onload = function() {
     var display = new ROT.Display(options);
     var map = new GameMap(options.width, options.height);
     var eventHandler = new EventHandler();
-    var player = new Entity(map.randomPosition(), "@", 'white', inLightColor);
-    var engine = new Engine(map, player, [new Entity(map.randomPosition(), 'a', 'white', inLightColor)], eventHandler, display);
+    var engine = new Engine(map, eventHandler, display);
 
     var bindEventToScreen = function(event) {
         window.addEventListener(event, function(e) {
