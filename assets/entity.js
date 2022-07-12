@@ -1,13 +1,18 @@
+import { inLightColor } from './map.js';
 
-export class Entity {
-    constructor(name, pos, glyph, fg, bg, blocker) {
-        this.x = pos[0]
-        this.y = pos[1]
+class Entity {
+
+    constructor({name="Error", glyph="?", fg, bg, blocker=false}) {
         this.glyph = glyph
         this.fg = fg
         this.bg = bg
         this.name = name
         this.blocker = blocker
+    }
+
+    setPosition(pos) {
+        this.x = pos[0]
+        this.y = pos[1]
     }
 
     move(xDelta, yDelta) {
@@ -21,4 +26,39 @@ export class Entity {
         }
     }
 
+}
+
+export class EntityFactory {
+    constructor() {
+        this.entities = {
+            "player": {
+                "name": "Player",
+                "glyph": "@",
+                "fg": 'white',
+                "bg": inLightColor,
+                "blocker": true
+            }, 
+            "orc": {
+                "name": "Orc",
+                "glyph": "o",
+                "fg": 'white',
+                "bg": inLightColor,
+                "blocker": true
+            }, 
+            "troll": {
+                "name": "Troll",
+                "glyph": "T",
+                "fg": 'white',
+                "bg": inLightColor,
+                "blocker": true
+            }
+        }
+    }
+
+    get(name, pos) {
+        var conf = this.entities[name];
+        var e = new Entity(conf);
+        e.setPosition(pos);
+        return e;
+    }
 }

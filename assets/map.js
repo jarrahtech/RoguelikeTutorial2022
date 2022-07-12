@@ -1,4 +1,4 @@
-import { Entity } from './entity.js';
+import { EntityFactory } from './entity.js';
 
 export class TileDisplay {
     constructor(glyph, fg, bg) {
@@ -32,7 +32,7 @@ export class TileType {
     }
 }
 
-var inLightColor = '#ffff0080';
+export var inLightColor = '#ffff0080';
 var rememberColor = '#777777aa';
 var wallColor = '#ccccccff'
 var unseenColor = 'black'
@@ -71,7 +71,8 @@ export class GameMap {
         this.map.create((x, y, value) => {
             this.tiles[x][y] = new Tile((value === 0)?floor:wall);
         });
-        this.player = new Entity("Player", this.randomPosition(), "@", 'white', inLightColor, true);
+        this.entityFactory = new EntityFactory();
+        this.player = this.entityFactory.get("player", this.randomPosition());
         this.entities = [];
         this.placeEntities(2);   
         this.fov = new ROT.FOV.PreciseShadowcasting(this.isTransparent.bind(this), { topology: 8 });
@@ -85,10 +86,7 @@ export class GameMap {
 
         this.map.getRooms().forEach(r => {
             for (var i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
-                switch(ROT.RNG.getWeightedValue(monsters)) {
-                    case "orc": this.entities.push(new Entity("Orc", this.randomRoomPosition(r), 'o', 'white', inLightColor, true)); break;
-                    case "troll": this.entities.push(new Entity("Troll", this.randomRoomPosition(r), 't', 'white', inLightColor, true)); break;
-                }
+                this.entities.push(this.entityFactory.get(ROT.RNG.getWeightedValue(monsters), this.randomRoomPosition(r)));
             }
         });
     }
