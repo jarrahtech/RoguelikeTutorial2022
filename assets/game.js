@@ -3,8 +3,10 @@ import { Engine } from './engine.js';
 import { GameMap } from './map.js';
 
 var options = {
-    width: 80,
-    height: 60
+    width: 60,
+    height: 40,
+    forceSquareRatio: true,
+    fontSize: 16
 }
 
 window.onload = function() {

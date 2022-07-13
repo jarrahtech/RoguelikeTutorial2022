@@ -32,7 +32,7 @@ export class TileType {
     }
 }
 
-export var inLightColor = '#ffff0080';
+export var inLightColor = '#ffff0070';
 var rememberColor = '#777777aa';
 var wallColor = '#ccccccff'
 var unseenColor = 'black'
@@ -86,7 +86,10 @@ export class GameMap {
 
         this.map.getRooms().forEach(r => {
             for (var i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
-                this.entities.push(this.entityFactory.get(ROT.RNG.getWeightedValue(monsters), this.randomRoomPosition(r)));
+                var pos = this.randomRoomPosition(r);
+                if (!this.blockingEntityAt(pos[0], pos[1])) {
+                    this.entities.push(this.entityFactory.get(ROT.RNG.getWeightedValue(monsters), pos));
+                }
             }
         });
     }
