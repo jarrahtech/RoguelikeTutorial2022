@@ -1,8 +1,10 @@
+"use strict";
+
 import { EventHandler } from './eventHandler.js';
 import { Engine } from './engine.js';
 import { GameMap } from './map.js';
 
-var options = {
+const options = {
     width: 60,
     height: 40,
     forceSquareRatio: true,
@@ -10,12 +12,12 @@ var options = {
 }
 
 window.onload = function() {
-    var display = new ROT.Display(options);
-    var map = new GameMap(options.width, options.height);
-    var eventHandler = new EventHandler();
-    var engine = new Engine(map, eventHandler, display);
+    let display = new ROT.Display(options);
+    let map = new GameMap(options.width, options.height);
+    let eventHandler = new EventHandler();
+    let engine = new Engine(map, eventHandler, display);
 
-    var bindEventToScreen = function(event) {
+    let bindEventToScreen = function(event) {
         window.addEventListener(event, function(e) {
             engine.handleInput(event, e);
         });

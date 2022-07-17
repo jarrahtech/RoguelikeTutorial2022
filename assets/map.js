@@ -1,3 +1,5 @@
+"use strict";
+
 import { EntityFactory } from './entity.js';
 
 export class TileDisplay {
@@ -7,8 +9,8 @@ export class TileDisplay {
         this.bg = bg;
     }
 
-    render(display, x, y) {
-        display.draw(x, y, this.glyph, this.fg, this.bg);
+    render(display, x, y, v=1) {
+        display.draw(x, y, this.glyph, this.fg, bgColor(this.bg, v));
     }
 }
 
@@ -22,42 +24,58 @@ export class TileType {
     }
 
     render(display, visible, seen, x, y) {
-        if (visible) {
-            this.visible.render(display, x, y);
+        if (visible>0) {
+            this.visible.render(display, x, y, visible);
         } else if (seen) {
             this.seen.render(display, x, y);
         } else {
             this.unseen.render(display, x, y);
         }
+    }  
+}
+
+export const transparentColor = 'blank';
+const inLightColor = '#ffff0070';
+const rememberColor = '#777777aa';
+const wallColor = '#cccccc';
+const unseenColor = 'black'
+
+const floor = new TileType(new TileDisplay(" ", unseenColor, transparentColor), new TileDisplay(" ", unseenColor, rememberColor), new TileDisplay(" ", unseenColor, unseenColor), true, true)
+const wall = new TileType(new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, unseenColor), false, false)
+
+let bgColor = function(color, v) {   
+    if (color==transparentColor) {
+        return inLightColor;
+        //let alpha = Math.round(128*v).toString(16);
+        //let bg = inLightColor.substring(0, 7)+alpha;
+        //return bg;
+    } else {
+        return color;
     }
 }
 
-export var inLightColor = '#ffff0070';
-var rememberColor = '#777777aa';
-var wallColor = '#ccccccff'
-var unseenColor = 'black'
-
-var floor = new TileType(new TileDisplay(" ", unseenColor, inLightColor), new TileDisplay(" ", unseenColor, rememberColor), new TileDisplay(" ", unseenColor, unseenColor), true, true)
-var wall = new TileType(new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, unseenColor), false, false)
-
 export class Tile {
     constructor(type) {
-        this.visible = false;
+        this.visible = 0.0;
         this.seen = false;
         this.type = type;
     }
 
     clearVisibility() {
-        this.visible = false;
+        this.visible = 0.0;
     }
 
-    setVisible() {
-        this.visible = true;
+    setVisible(v) {
+        this.visible = v;
         this.seen = true;
     }
 
     render(display, x, y) {
         this.type.render(display, this.visible, this.seen, x, y);
+    }
+
+    bgColor(color) {
+        return bgColor(color, this.visible);
     }
 }
 
@@ -85,9 +103,9 @@ export class GameMap {
         }
 
         this.map.getRooms().forEach(r => {
-            for (var i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
-                var pos = this.randomRoomPosition(r);
-                if (!this.blockingEntityAt(pos[0], pos[1])) {
+            for (let i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
+                let pos = this.randomRoomPosition(r);
+                if (this.blockingEntityAt(pos[0], pos[1])==null) {
                     this.entities.push(this.entityFactory.get(ROT.RNG.getWeightedValue(monsters), pos));
                 }
             }
@@ -99,7 +117,7 @@ export class GameMap {
     }
 
     isVisible(x, y) {
-        return this.inBounds(x, y) && this.tiles[x][y].visible;
+        return this.inBounds(x, y) && this.tiles[x][y].visible>0;
     }
 
     isTransparent(x, y) {
@@ -107,8 +125,11 @@ export class GameMap {
     }
 
     blockingEntityAt(x, y) {
-        for (var i=0; i<this.entities.length; i++) {
-            var entity = this.entities[i];
+        if (this.player.x==x && this.player.y==y) {
+            return this.player;
+        }
+        for (let i=0; i<this.entities.length; i++) {
+            let entity = this.entities[i];
             if (entity.blocker && entity.x===x && entity.y===y) {
                 return entity;
             }
@@ -117,8 +138,8 @@ export class GameMap {
     }
 
     clearFov() {
-        for (var x=0; x<this.width; x++) {
-            for (var y=0; y<this.height; y++) {
+        for (let x=0; x<this.width; x++) {
+            for (let y=0; y<this.height; y++) {
                 this.tiles[x][y].clearVisibility();
             }
         }
@@ -127,14 +148,14 @@ export class GameMap {
     updateFov(entity) {
         this.clearFov();
         this.fov.compute(entity.x, entity.y, 8, function(x,y,r,v) {
-            this.tiles[x][y].setVisible();
+            this.tiles[x][y].setVisible(v);
         }.bind(this));
     }
 
     render(display) {
         this.updateFov(this.player);
-        for (var x=0; x<this.width; x++) {
-            for (var y=0; y<this.height; y++) {
+        for (let x=0; x<this.width; x++) {
+            for (let y=0; y<this.height; y++) {
                 this.tiles[x][y].render(display, x, y);
             }
         }
@@ -143,7 +164,7 @@ export class GameMap {
     }
 
     randomPosition() {
-        var rooms = this.map.getRooms();
+        const rooms = this.map.getRooms();
         return this.randomRoomPosition(rooms[this.randInt(0, rooms.length-1)]);
     }
 
