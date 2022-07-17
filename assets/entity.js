@@ -1,6 +1,6 @@
 "use strict";
 
-import { transparentColor } from './map.js';
+import { inLightColor } from './map.js';
 
 class Entity {
 
@@ -24,8 +24,7 @@ class Entity {
 
     render(display, gameMap) {
         if (gameMap.isVisible(this.x, this.y)) {
-            const nbg = gameMap.tiles[this.x][this.y].bgColor(this.bg);
-            display.draw(this.x, this.y, this.glyph, this.fg, nbg);
+            display.draw(this.x, this.y, this.glyph, this.fg, this.bg);
         }
     }
 
@@ -38,21 +37,21 @@ export class EntityFactory {
                 "name": "Player",
                 "glyph": "@",
                 "fg": 'white',
-                "bg": transparentColor,
+                "bg": inLightColor,
                 "blocker": true
             }, 
             "orc": {
                 "name": "Orc",
                 "glyph": "o",
                 "fg": 'white',
-                "bg": transparentColor,
+                "bg": inLightColor,
                 "blocker": true
             }, 
             "troll": {
                 "name": "Troll",
                 "glyph": "T",
                 "fg": 'white',
-                "bg": transparentColor,
+                "bg": inLightColor,
                 "blocker": true
             }
         }

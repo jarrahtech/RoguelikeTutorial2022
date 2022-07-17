@@ -10,7 +10,7 @@ export class TileDisplay {
     }
 
     render(display, x, y, v=1) {
-        display.draw(x, y, this.glyph, this.fg, bgColor(this.bg, v));
+        display.draw(x, y, this.glyph, this.fg, this.bg);
     }
 }
 
@@ -34,25 +34,13 @@ export class TileType {
     }  
 }
 
-export const transparentColor = 'blank';
-const inLightColor = '#ffff0070';
+export const inLightColor = '#ffff0070';
 const rememberColor = '#777777aa';
 const wallColor = '#cccccc';
 const unseenColor = 'black'
 
-const floor = new TileType(new TileDisplay(" ", unseenColor, transparentColor), new TileDisplay(" ", unseenColor, rememberColor), new TileDisplay(" ", unseenColor, unseenColor), true, true)
-const wall = new TileType(new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, unseenColor), false, false)
-
-let bgColor = function(color, v) {   
-    if (color==transparentColor) {
-        return inLightColor;
-        //let alpha = Math.round(128*v).toString(16);
-        //let bg = inLightColor.substring(0, 7)+alpha;
-        //return bg;
-    } else {
-        return color;
-    }
-}
+const floor = new TileType(new TileDisplay(" ", unseenColor, inLightColor), new TileDisplay(" ", unseenColor, rememberColor), new TileDisplay(" ", unseenColor, unseenColor), true, true)
+const wall = new TileType(new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, unseenColor), false, false);
 
 export class Tile {
     constructor(type) {
