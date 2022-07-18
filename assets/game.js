@@ -3,6 +3,7 @@
 import { EventHandler } from './eventHandler.js';
 import { Engine } from './engine.js';
 import { GameMap } from './map.js';
+import { EntityFactory } from './entity.js';
 
 const options = {
     width: 60,
@@ -13,9 +14,10 @@ const options = {
 
 window.onload = function() {
     let display = new ROT.Display(options);
-    let map = new GameMap(options.width, options.height);
+    let player = new EntityFactory().get("player");
+    let map = new GameMap(options.width, options.height, player);
     let eventHandler = new EventHandler();
-    let engine = new Engine(map, eventHandler, display);
+    let engine = new Engine(player, map, eventHandler, display);
 
     let bindEventToScreen = function(event) {
         window.addEventListener(event, function(e) {

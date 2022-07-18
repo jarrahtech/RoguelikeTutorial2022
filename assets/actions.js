@@ -1,49 +1,42 @@
 "use strict";
 
 export class Action {
-    perform(engine, entity) {}
+    perform() {}
 }
 
 class ActionWithDirection extends Action {
-    constructor(xDelta, yDelta) {
+    constructor(entity, dx, dy, dest = entity.location.delta(dx, dy), block = dest.blockingEntity()) {
         super();
-        this.xDelta = xDelta;
-		this.yDelta = yDelta;
+        this.entity = entity;
+        this.dx = dx;
+        this.dy = dy;
+        this.destination = dest;
+        this.blocker = block;
     }
 
-    perform(engine, entity) { }
+    perform() { }
 }
 
 class MoveAction extends ActionWithDirection {
-    perform(engine, entity) {
-        const x = entity.x + this.xDelta;
-        const y = entity.y + this.yDelta;
-
-        if (engine.gameMap.inBounds(x, y) && engine.gameMap.tiles[x][y].type.walkable && engine.gameMap.blockingEntityAt(x, y)==null) {
-            entity.move(this.xDelta, this.yDelta);
+    perform() {        
+        if (this.destination.isWalkable()) {         
+            this.entity.moveTo(this.destination);
         }
     }
 }
 
 class MeleeAction extends ActionWithDirection {
-    perform(engine, entity) {
-        const x = entity.x + this.xDelta;
-        const y = entity.y + this.yDelta;
-        const target = engine.gameMap.blockingEntityAt(x, y);
-        if (target!=null) {
-            alert(`You kick the ${target.name}, much to its annoyance!`);
-        }
+    perform() {
+        alert(`You kick the ${this.blocker.name}, much to its annoyance!`);
     }
 }
 
 export class BumpAction extends ActionWithDirection {
-    perform(engine, entity) {
-        const x = entity.x + this.xDelta;
-        const y = entity.y + this.yDelta;
-        if (engine.gameMap.blockingEntityAt(x, y)==null) {
-            return new MoveAction(this.xDelta, this.yDelta).perform(engine, entity)   
+    perform() {
+        if (this.blocker==null) {
+            return new MoveAction(this.entity, this.dx, this.dy, this.destination, null).perform()   
         } else {
-            return new MeleeAction(this.xDelta, this.yDelta).perform(engine, entity)
+            return new MeleeAction(this.entity, this.dx, this.dy, this.destination, this.blocker).perform()
         }
     }
 }

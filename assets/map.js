@@ -2,6 +2,47 @@
 
 import { EntityFactory } from './entity.js';
 
+export class Location {
+    constructor(x, y, map) {
+        this.x = x;
+        this.y = y;
+        this.map = map;
+    }
+
+    delta(dx, dy) {
+        return new Location(this.x+dx, this.y+dy, this.map);
+    }
+
+    inBounds() {
+        return 0<=this.x && this.x<this.map.width && 0<=this.y && this.y<this.map.height;
+    }
+
+    isVisible() {
+        return this.inBounds() && this.map.tileAt(this).visible>0;
+    }
+
+    isTransparent() {
+        return this.inBounds() && this.map.tileAt(this).type.transparent;
+    }
+
+    isWalkable() {
+        return this.inBounds() && this.map.tileAt(this).type.walkable;
+    }
+
+    blockingEntity() {
+        for (let entity of this.map.entities) {
+            if (entity.blocker && entity.location.equiv(this)) {
+                return entity;
+            }
+        }
+        return null;
+    }
+
+    equiv(other) {
+        return this.x===other.x && this.y===other.y;
+    }
+}
+
 export class TileDisplay {
     constructor(glyph, fg, bg) {
         this.glyph = glyph;
@@ -69,7 +110,7 @@ export class Tile {
 
 export class GameMap {
 
-    constructor(width, height) {
+    constructor(width, height, player) {
         this.width = width;
         this.height = height;
         this.map = new ROT.Map.Digger(width, height);       
@@ -77,52 +118,33 @@ export class GameMap {
         this.map.create((x, y, value) => {
             this.tiles[x][y] = new Tile((value === 0)?floor:wall);
         });
-        this.entityFactory = new EntityFactory();
-        this.player = this.entityFactory.get("player", this.randomPosition());
-        this.entities = [];
-        this.placeEntities(2);   
-        this.fov = new ROT.FOV.PreciseShadowcasting(this.isTransparent.bind(this), { topology: 8 });
+        player.moveTo(this.randomPosition());
+        this.entities = [player];
+        this.placeEntities(2, new EntityFactory());   
+        this.fov = new ROT.FOV.PreciseShadowcasting((x, y) => { 
+            return new Location(x, y, this).isTransparent();
+        }, { topology: 8 });
     }
 
-    placeEntities(maxPerRoom) {
+    placeEntities(maxPerRoom, factory) {
         var monsters = {
             "orc": 4,
             "troll": 1
         }
-
         this.map.getRooms().forEach(r => {
             for (let i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
-                let pos = this.randomRoomPosition(r);
-                if (this.blockingEntityAt(pos[0], pos[1])==null) {
-                    this.entities.push(this.entityFactory.get(ROT.RNG.getWeightedValue(monsters), pos));
+                let location = this.randomRoomPosition(r);
+                if (location.blockingEntity()==null) {
+                    let e = factory.get(ROT.RNG.getWeightedValue(monsters));
+                    e.moveTo(location);
+                    this.entities.push(e);
                 }
             }
         });
     }
 
-    inBounds(x, y) {
-        return 0<=x && x<this.width && 0<=y && y<this.height;
-    }
-
-    isVisible(x, y) {
-        return this.inBounds(x, y) && this.tiles[x][y].visible>0;
-    }
-
-    isTransparent(x, y) {
-        return this.inBounds(x, y) && this.tiles[x][y].type.transparent;
-    }
-
-    blockingEntityAt(x, y) {
-        if (this.player.x==x && this.player.y==y) {
-            return this.player;
-        }
-        for (let i=0; i<this.entities.length; i++) {
-            let entity = this.entities[i];
-            if (entity.blocker && entity.x===x && entity.y===y) {
-                return entity;
-            }
-        }
-        return null;
+    tileAt(location) {
+        return this.tiles[location.x][location.y];
     }
 
     clearFov() {
@@ -135,20 +157,19 @@ export class GameMap {
 
     updateFov(entity) {
         this.clearFov();
-        this.fov.compute(entity.x, entity.y, 8, function(x,y,r,v) {
+        this.fov.compute(entity.location.x, entity.location.y, 8, function(x,y,r,v) {
             this.tiles[x][y].setVisible(v);
         }.bind(this));
     }
 
-    render(display) {
-        this.updateFov(this.player);
+    render(display, entity) {
+        this.updateFov(entity);
         for (let x=0; x<this.width; x++) {
             for (let y=0; y<this.height; y++) {
                 this.tiles[x][y].render(display, x, y);
             }
         }
-        this.player.render(display, this);
-        this.entities.forEach((e, i) => e.render(display, this));
+        this.entities.forEach((e, i) => e.render(display));
     }
 
     randomPosition() {
@@ -157,7 +178,7 @@ export class GameMap {
     }
 
     randomRoomPosition(room) {
-        return [this.randInt(room.getLeft(), room.getRight()), this.randInt(room.getTop(), room.getBottom())];
+        return new Location(this.randInt(room.getLeft(), room.getRight()), this.randInt(room.getTop(), room.getBottom()), this);
     }
 
     randInt(min, max) {

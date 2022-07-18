@@ -1,22 +1,23 @@
 "use strict";
 
 export class Engine {
-    constructor(gameMap, eventHandler, display) {
+    constructor(player, gameMap, eventHandler, display) {
+        this.player = player;
         this.gameMap = gameMap;       
         this.eventHandler = eventHandler;
         this.display = display;
     }
 
     handleInput(inputType, inputData) {
-        const action = this.eventHandler.dispatch(inputType, inputData);
-        action.perform(this, this.gameMap.player);
+        const action = this.eventHandler.dispatch(this.player, inputType, inputData);
+        action.perform();
         this.handleEntitiesTurn();
         this.render();
     }
 
     render() {
         this.display.clear();
-        this.gameMap.render(this.display);
+        this.gameMap.render(this.display, this.player);
     }
 
     handleEntitiesTurn() {
