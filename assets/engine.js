@@ -18,12 +18,12 @@ export class Engine {
 
     render() {
         this.display.clear();
-        this.gameMap.render(this.display, this.player);
+        this.gameMap.render(this.display);
     }
 
     handleEntitiesTurn() {
         this.gameMap.entities.forEach(e => {
-            //console.log(`${e.name} looks forward to taking a turn`);
+            if (e.act) e.act();
         });
     }
 }

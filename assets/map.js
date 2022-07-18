@@ -13,6 +13,10 @@ export class Location {
         return new Location(this.x+dx, this.y+dy, this.map);
     }
 
+    shift(x, y) {
+        return new Location(x, y, this.map);
+    }
+
     inBounds() {
         return 0<=this.x && this.x<this.map.width && 0<=this.y && this.y<this.map.height;
     }
@@ -40,6 +44,16 @@ export class Location {
 
     equiv(other) {
         return this.x===other.x && this.y===other.y;
+    }
+
+    distance(other) {
+        let dx = other.x - this.x;
+        let dy = other.y - this.y;
+        return Math.max(Math.abs(dx), Math.abs(dy));  // Chebyshev distance.
+    }
+
+    deltaTo(other) {
+        return [other.x-this.x, other.y-this.y];
     }
 }
 
@@ -106,6 +120,7 @@ export class Tile {
     bgColor(color) {
         return bgColor(color, this.visible);
     }
+
 }
 
 export class GameMap {
@@ -118,6 +133,7 @@ export class GameMap {
         this.map.create((x, y, value) => {
             this.tiles[x][y] = new Tile((value === 0)?floor:wall);
         });
+        this.player = player;
         player.moveTo(this.randomPosition());
         this.entities = [player];
         this.placeEntities(2, new EntityFactory());   
@@ -128,8 +144,8 @@ export class GameMap {
 
     placeEntities(maxPerRoom, factory) {
         var monsters = {
-            "orc": 4,
-            "troll": 1
+            orc: 4,
+            troll: 1
         }
         this.map.getRooms().forEach(r => {
             for (let i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
@@ -162,8 +178,8 @@ export class GameMap {
         }.bind(this));
     }
 
-    render(display, entity) {
-        this.updateFov(entity);
+    render(display) {
+        this.updateFov(this.player);
         for (let x=0; x<this.width; x++) {
             for (let y=0; y<this.height; y++) {
                 this.tiles[x][y].render(display, x, y);

@@ -22,9 +22,9 @@ class ActionWithDirection extends Action {
     }
 }
 
-class MoveAction extends ActionWithDirection {
-    perform() {        
-        if (this.destination.isWalkable()) {         
+export class MoveAction extends ActionWithDirection {
+    perform() {       
+        if (this.destination.isWalkable() && this.blocker==null) {         
             this.entity.moveTo(this.destination);
             return true;
         }
@@ -32,10 +32,13 @@ class MoveAction extends ActionWithDirection {
     }
 }
 
-class MeleeAction extends ActionWithDirection {
+export class MeleeAction extends ActionWithDirection {
     perform() {
-        alert(`You kick the ${this.blocker.name}, much to its annoyance!`);
-        return true;
+        if (this.blocker!=null) {
+            alert(`You kick the ${this.blocker.name}, much to its annoyance!`);
+            return true;
+        }
+        return false;
     }
 }
 
