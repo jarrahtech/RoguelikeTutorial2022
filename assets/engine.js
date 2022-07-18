@@ -10,9 +10,10 @@ export class Engine {
 
     handleInput(inputType, inputData) {
         const action = this.eventHandler.dispatch(this.player, inputType, inputData);
-        action.perform();
-        this.handleEntitiesTurn();
-        this.render();
+        if (action.perform()) {
+            this.handleEntitiesTurn();
+            this.render();
+        }
     }
 
     render() {
