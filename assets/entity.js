@@ -33,6 +33,20 @@ export class EntityFactory {
             fg: 'white',
             bg: inLightColor,
             blocker: true,
+            mixins: [
+                [EntityComponents.Fighter, function() {
+                    this.maxHp = this.currHp = 30;
+                    this.defense = 2;
+                    this.power = 5;
+                }]
+            ]
+        }, 
+        corpse: {
+            name: "Remains of ",
+            glyph: "%",
+            fg: 'red',
+            bg: inLightColor,
+            blocker: false,
             mixins: []
         }, 
         orc: {
@@ -41,7 +55,14 @@ export class EntityFactory {
             fg: 'white',
             bg: inLightColor,
             blocker: true,
-            mixins: [EntityComponents.HostileEnemy]
+            mixins: [
+                [EntityComponents.HostileEnemy], 
+                [EntityComponents.Fighter, function() {
+                    this.maxHp = this.currHp = 10;
+                    this.defense = 0;
+                    this.power = 3;
+                }]
+            ]
         }, 
         troll: {
             name: "Troll",
@@ -49,15 +70,25 @@ export class EntityFactory {
             fg: 'white',
             bg: inLightColor,
             blocker: true,
-            mixins: [EntityComponents.HostileEnemy]
+            mixins: [
+                [EntityComponents.HostileEnemy], 
+                [EntityComponents.Fighter, function() {
+                    this.maxHp = this.currHp = 16;
+                    this.defense = 1;
+                    this.power = 4;
+                }]
+            ]
         }
     };
 
     get(name) {
         let conf = this.entitiesConfig[name];
         let entity = new Entity(conf);
-        for (let mixin of conf.mixins) {
+        for (let [mixin, initFn] of conf.mixins) {
             Object.assign(entity, mixin);
+            if (initFn) {
+                (initFn.bind(entity))();
+            }
         }
         return entity;
     }
@@ -90,13 +121,28 @@ const EntityComponents = {
     },
     Fighter: {
         maxHp: 0,
-        hp: 0,
+        currHp: 0,
         defense: 0,
         power: 0,
-        initMixin(conf) {
-            this.maxHp = this.hp = conf.hp;
-            this.defense = conf.defense;
-            this.power = conf.power;
+        attack(target) {
+            let damage = this.power - target.defense;
+            let desc = `${this.name} attacks the ${target.name}`;
+            if (damage>0) {
+                alert(`${desc} for ${damage} hit points`);
+                target.hp(target.currHp-damage);
+            } else {
+                alert(`${desc} but does no damage`);
+            }
+        },
+        hp(value) {
+            this.currHp = Math.max(0, Math.min(value, this.maxHp));
+            if (this.currHp<=0) {
+                this.die();
+            } 
+        },
+        die() {
+            alert(`${this.name} dies`);
+            this.location.map.corpsify(this);
         }
     }
 };

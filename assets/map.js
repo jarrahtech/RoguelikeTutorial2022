@@ -136,7 +136,8 @@ export class GameMap {
         this.player = player;
         player.moveTo(this.randomPosition());
         this.entities = [player];
-        this.placeEntities(2, new EntityFactory());   
+        this.factory = new EntityFactory();
+        this.placeEntities(2, this.factory);   
         this.fov = new ROT.FOV.PreciseShadowcasting((x, y) => { 
             return new Location(x, y, this).isTransparent();
         }, { topology: 8 });
@@ -157,6 +158,15 @@ export class GameMap {
                 }
             }
         });
+    }
+
+    corpsify(entity) {
+        let idx = this.entities.indexOf(entity);
+        this.entities.splice(idx, 1);
+        let corpse = this.factory.get("corpse");
+        corpse.moveTo(entity.location);
+        corpse.name += entity.name;
+        this.entities.push(corpse);
     }
 
     tileAt(location) {

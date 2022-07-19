@@ -24,7 +24,7 @@ class ActionWithDirection extends Action {
 
 export class MoveAction extends ActionWithDirection {
     perform() {       
-        if (this.destination.isWalkable() && this.blocker==null) {         
+        if (this.destination.isWalkable() && !this.blocker) {         
             this.entity.moveTo(this.destination);
             return true;
         }
@@ -34,8 +34,8 @@ export class MoveAction extends ActionWithDirection {
 
 export class MeleeAction extends ActionWithDirection {
     perform() {
-        if (this.blocker!=null) {
-            alert(`You kick the ${this.blocker.name}, much to its annoyance!`);
+        if (this.blocker && this.entity.attack && this.blocker.hp) {
+            this.entity.attack(this.blocker);
             return true;
         }
         return false;
@@ -44,7 +44,7 @@ export class MeleeAction extends ActionWithDirection {
 
 export class BumpAction extends ActionWithDirection {
     perform() {
-        if (this.blocker==null) {
+        if (!this.blocker) {
             return new MoveAction(this.entity, this.delta, this.destination, null).perform()   
         } else {
             return new MeleeAction(this.entity, this.delta, this.destination, this.blocker).perform()
