@@ -123,6 +123,10 @@ export class Tile {
 
 }
 
+let compareEntityRenderOrder = function(a, b) {
+    return a.renderOrder - b.renderOrder;
+}
+
 export class GameMap {
 
     constructor(width, height, player) {
@@ -137,7 +141,8 @@ export class GameMap {
         player.moveTo(this.randomPosition());
         this.entities = [player];
         this.factory = new EntityFactory();
-        this.placeEntities(2, this.factory);   
+        this.placeEntities(2, this.factory);  
+        this.entities.sort(compareEntityRenderOrder); 
         this.fov = new ROT.FOV.PreciseShadowcasting((x, y) => { 
             return new Location(x, y, this).isTransparent();
         }, { topology: 8 });
@@ -167,6 +172,7 @@ export class GameMap {
         corpse.moveTo(entity.location);
         corpse.name += entity.name;
         this.entities.push(corpse);
+        this.entities.sort(compareEntityRenderOrder);
     }
 
     tileAt(location) {

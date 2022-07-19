@@ -3,13 +3,21 @@
 import { inLightColor } from './map.js';
 import { MoveAction, MeleeAction } from './actions.js';
 
+const RenderOrder = {
+    CORPSE: 1,
+    ITEM: 2,
+    ACTOR: 3
+};
+Object.freeze(RenderOrder);
+
 class Entity {
 
-    constructor({name="Error", glyph="?", fg, bg, blocker=false}) {
+    constructor({name="Error", glyph="?", fg, bg, renderOrder, blocker=false}) {
         this.glyph = glyph
         this.fg = fg
         this.bg = bg
         this.name = name
+        this.renderOrder = renderOrder
         this.blocker = blocker
     }
 
@@ -32,8 +40,9 @@ export class EntityFactory {
             glyph: "@",
             fg: 'white',
             bg: inLightColor,
+            renderOrder: RenderOrder.ACTOR,
             blocker: true,
-            mixins: [
+            components: [
                 [EntityComponents.Fighter, function() {
                     this.maxHp = this.currHp = 30;
                     this.defense = 2;
@@ -46,16 +55,18 @@ export class EntityFactory {
             glyph: "%",
             fg: 'red',
             bg: inLightColor,
+            renderOrder: RenderOrder.CORPSE,
             blocker: false,
-            mixins: []
+            components: []
         }, 
         orc: {
             name: "Orc",
             glyph: "o",
             fg: 'white',
             bg: inLightColor,
+            renderOrder: RenderOrder.ACTOR,
             blocker: true,
-            mixins: [
+            components: [
                 [EntityComponents.HostileEnemy], 
                 [EntityComponents.Fighter, function() {
                     this.maxHp = this.currHp = 10;
@@ -69,8 +80,9 @@ export class EntityFactory {
             glyph: "T",
             fg: 'white',
             bg: inLightColor,
+            renderOrder: RenderOrder.ACTOR,
             blocker: true,
-            mixins: [
+            components: [
                 [EntityComponents.HostileEnemy], 
                 [EntityComponents.Fighter, function() {
                     this.maxHp = this.currHp = 16;
@@ -84,8 +96,8 @@ export class EntityFactory {
     get(name) {
         let conf = this.entitiesConfig[name];
         let entity = new Entity(conf);
-        for (let [mixin, initFn] of conf.mixins) {
-            Object.assign(entity, mixin);
+        for (let [component, initFn] of conf.components) {
+            Object.assign(entity, component);
             if (initFn) {
                 (initFn.bind(entity))();
             }
