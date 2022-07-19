@@ -3,7 +3,8 @@
 export class Engine {
     constructor(player, gameMap, eventHandler, display) {
         this.player = player;
-        this.gameMap = gameMap;       
+        this.gameMap = gameMap;  
+        this.gameMap.engine = this;     
         this.eventHandler = eventHandler;
         this.display = display;
     }

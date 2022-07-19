@@ -2,6 +2,7 @@
 
 import { inLightColor } from './map.js';
 import { MoveAction, MeleeAction } from './actions.js';
+import { NoEventHandler } from './eventHandler.js';
 
 const RenderOrder = {
     CORPSE: 1,
@@ -153,7 +154,12 @@ const EntityComponents = {
             } 
         },
         die() {
-            alert(`${this.name} dies`);
+            if (this===this.location.map.player) {
+                alert("You died");
+                this.location.map.engine.eventHandler = new NoEventHandler();
+            } else {
+                alert(`${this.name} dies`);
+            }
             this.location.map.corpsify(this);
         }
     }

@@ -2,7 +2,13 @@
 
 import { Action, BumpAction, WaitAction } from "./actions.js";
 
-export class EventHandler {
+export class NoEventHandler {
+    dispatch(player, inputType, inputData) {
+        return new Action();
+    }
+}
+
+export class MainEventHandler {
 
     moveKeys = new Map([
         // Left

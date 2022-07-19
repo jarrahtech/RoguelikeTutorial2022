@@ -1,6 +1,6 @@
 "use strict";
 
-import { EventHandler } from './eventHandler.js';
+import { MainEventHandler } from './eventHandler.js';
 import { Engine } from './engine.js';
 import { GameMap } from './map.js';
 import { EntityFactory } from './entity.js';
@@ -16,7 +16,7 @@ window.onload = function() {
     let display = new ROT.Display(options);
     let player = new EntityFactory().get("player");
     let map = new GameMap(options.width, options.height, player);
-    let eventHandler = new EventHandler();
+    let eventHandler = new MainEventHandler();
     let engine = new Engine(player, map, eventHandler, display);
 
     let bindEventToScreen = function(event) {
