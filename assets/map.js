@@ -1,6 +1,7 @@
 "use strict";
 
 import { EntityFactory } from './entity.js';
+import { inLightColor } from './color.js';
 
 export class Location {
     constructor(x, y, map) {
@@ -89,13 +90,8 @@ export class TileType {
     }  
 }
 
-export const inLightColor = '#ffff0070';
-const rememberColor = '#777777aa';
-const wallColor = '#cccccc';
-const unseenColor = 'black'
-
-const floor = new TileType(new TileDisplay(" ", unseenColor, inLightColor), new TileDisplay(" ", unseenColor, rememberColor), new TileDisplay(" ", unseenColor, unseenColor), true, true)
-const wall = new TileType(new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, wallColor), new TileDisplay(" ", unseenColor, unseenColor), false, false);
+const floor = new TileType(new TileDisplay(" ", 'black', inLightColor), new TileDisplay(" ", 'black', '#777777aa'), new TileDisplay(" ", 'black', 'black'), true, true)
+const wall = new TileType(new TileDisplay(" ", 'black', '#cccccc'), new TileDisplay(" ", 'black', '#cccccc'), new TileDisplay(" ", 'black', 'black'), false, false);
 
 export class Tile {
     constructor(type) {

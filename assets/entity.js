@@ -1,6 +1,6 @@
 "use strict";
 
-import { inLightColor } from './map.js';
+import { inLightColor } from './color.js';
 import { MoveAction, MeleeAction } from './actions.js';
 import { NoEventHandler } from './eventHandler.js';
 
