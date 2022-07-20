@@ -1,6 +1,6 @@
 "use strict";
 
-import { inLightColor } from './color.js';
+import { inLightColor, playerAtkColor, enemyAtkColor, playerDieColor, enemyDieColor } from './color.js';
 import { MoveAction, MeleeAction } from './actions.js';
 import { NoEventHandler } from './eventHandler.js';
 
@@ -20,6 +20,10 @@ class Entity {
         this.name = name
         this.renderOrder = renderOrder
         this.blocker = blocker
+    }
+
+    engine() {
+        return this.location.map.engine;
     }
 
     moveTo(destination) {
@@ -139,12 +143,13 @@ const EntityComponents = {
         power: 0,
         attack(target) {
             let damage = this.power - target.defense;
+            let color = this.engine().player===this?playerAtkColor:enemyAtkColor;
             let desc = `${this.name} attacks the ${target.name}`;
             if (damage>0) {
-                alert(`${desc} for ${damage} hit points`);
+                this.engine().messages.addMessage(`${desc} for ${damage} hit points`, color);
                 target.hp(target.currHp-damage);
             } else {
-                alert(`${desc} but does no damage`);
+                this.engine().messages.addMessage(`${desc} but does no damage`, color);
             }
         },
         hp(value) {
@@ -155,10 +160,10 @@ const EntityComponents = {
         },
         die() {
             if (this===this.location.map.player) {
-                alert("You died");
-                this.location.map.engine.eventHandler = new NoEventHandler();
+                this.engine().messages.addMessage("You died", playerDieColor);
+                this.engine().eventHandler = new NoEventHandler();
             } else {
-                alert(`${this.name} dies`);
+                this.engine().messages.addMessage(`${this.name} dies`, enemyDieColor);
             }
             this.location.map.corpsify(this);
         }
