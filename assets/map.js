@@ -34,6 +34,16 @@ export class Location {
         return this.inBounds() && this.map.tileAt(this).type.walkable;
     }
 
+    entities() {
+        let result = [];
+        for (let entity of this.map.entities) {
+            if (entity.location.equiv(this)) {
+                result.push(entity);
+            }
+        }
+        return result;
+    }
+
     blockingEntity() {
         for (let entity of this.map.entities) {
             if (entity.blocker && entity.location.equiv(this)) {

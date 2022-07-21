@@ -1,14 +1,24 @@
 "use strict";
 
 import { Action, BumpAction, WaitAction } from "./actions.js";
+import { Location } from "./map.js";
 
 export class NoEventHandler {
-    dispatch(player, inputType, inputData) {
+    dispatch(player, inputData) {
         return new Action();
+    }
+
+    mouse(player, inputData) {
+        const [x, y] = player.engine().display.eventToPosition(inputData);
+        const mouseLoc = new Location(x, y, player.location.map);
+        if (mouseLoc.isVisible()) {
+            const line = ROT.Util.capitalize(mouseLoc.entities().map(e => e.name).join(", "));
+            player.engine().info(line)
+        }
     }
 }
 
-export class MainEventHandler {
+export class MainEventHandler extends NoEventHandler {
 
     moveKeys = new Map([
         // Left
@@ -50,15 +60,13 @@ export class MainEventHandler {
         ROT.KEYS.VK_KEYPAD0
     ]);
 
-    dispatch(player, inputType, inputData) {
-        inputData.preventDefault();
-        if (inputType === 'keydown') { 
-            if (this.moveKeys.has(inputData.keyCode)) {
-                return new BumpAction(player, this.moveKeys.get(inputData.keyCode));
-            } else if (this.waitKeys.has(inputData.keyCode)) {
-                return new WaitAction();
-            }        
-        } 
+    dispatch(player, inputData) {
+        if (this.moveKeys.has(inputData.keyCode)) {
+            return new BumpAction(player, this.moveKeys.get(inputData.keyCode));
+        } else if (this.waitKeys.has(inputData.keyCode)) {
+            return new WaitAction();
+        }        
         return new Action(); 
     }  
+
 }

@@ -20,6 +20,29 @@ class Message {
     }
 }
 
+export class InfoLine {
+    constructor(x, y, width) {
+        this.x = x
+        this.y = y
+        this.width = width     
+    } 
+    
+    clear(display) {
+        for (let j=0; j<this.width; j++) {
+            display.draw(this.x+j, this.y, " ", 'white', null);
+        }  
+    }
+
+    show(display, text) {
+        this.clear(display);
+        const line = text.substring(0, this.width);   
+        const offset = Math.floor((this.width-line.length)/2)
+        for (let j=0; j<line.length; j++) {
+            display.draw(this.x+j+offset, this.y, line[j], 'white', null);
+        }   
+    }
+}
+
 export class MessageLog {
 
     constructor(x, y, width, height) {

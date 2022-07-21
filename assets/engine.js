@@ -1,7 +1,7 @@
 "use strict";
 
 export class Engine {
-    constructor(player, gameMap, eventHandler, display, hpBar, messages) {
+    constructor(player, gameMap, eventHandler, display, hpBar, messages, info) {
         this.player = player;
         this.gameMap = gameMap;  
         this.gameMap.engine = this;     
@@ -9,14 +9,25 @@ export class Engine {
         this.display = display;
         this.hpBar = hpBar;
         this.messages = messages;
+        this.infoLine = info;
     }
 
     handleInput(inputType, inputData) {
-        const action = this.eventHandler.dispatch(this.player, inputType, inputData);
-        if (action.perform()) {
-            this.handleEntitiesTurn();
-            this.render();
+        inputData.preventDefault();
+        switch (inputType) {
+            case 'keydown': const action = this.eventHandler.dispatch(this.player, inputData);
+                            if (action.perform()) {
+                                this.handleEntitiesTurn();
+                                this.render();
+                            }
+                            break;
+            case 'mousemove': this.eventHandler.mouse(this.player, inputData); break;
+            default: break;
         }
+    }
+
+    info(line) {
+        this.infoLine.show(this.display, line);
     }
 
     render() {
