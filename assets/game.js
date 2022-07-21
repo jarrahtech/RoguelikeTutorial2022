@@ -14,7 +14,7 @@ export const conf = {
     dungeonHeight: 40,
     forceSquareRatio: true,
     fontSize: 16,
-    messageHistoryBorder: 2,
+    messageHistoryBorder: 1,
 
     init() { this.height = this.dungeonHeight + this.uiHeight }
 }

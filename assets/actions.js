@@ -52,31 +52,30 @@ export class BumpAction extends ActionWithDirection {
 }
 
 export class ShowMessageHistoryAction {
-    //constructor(x, y, width, height, messages, display) {
-    constructor(messages, display) {
+    constructor(x, y, width, height, messages, display) {
         this.messages = messages;
-        //this.x = x
-       //this.y = y
-        //this.width = width
-        //this.height = height
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
         this.display = display
     }
 
     perform() {
         this.display.clear();
+        for (let i=0; i<this.width; i++) {
+            this.display.draw(this.x+i, this.y, " ", null, 'grey');
+            this.display.draw(this.x+i, this.y+this.height-1, " ", null, 'grey');
+        }
+        for (let i=1; i<this.height-1; i++) {
+            this.display.draw(this.x, this.y+i, " ", null, 'grey');
+            this.display.draw(this.x+this.width-1, this.y+i, " ", null, 'grey');
+        }
+        const title = "Message History"
+        for (let i=0; i<title.length; i++) {
+            this.display.drawOver(this.x+2+i, this.y, title[i], 'white', null);
+        }
         this.messages.render(this.display);
-        //log_console.draw_frame(0, 0, log_console.width, log_console.height)
-        //log_console.print_box(
-        //    0, 0, log_console.width, 1, "┤Message history├", alignment=tcod.CENTER
-        //)
-        //self.engine.message_log.render_messages(
-        //    log_console,
-        //    1,
-        //    1,
-        //    log_console.width - 2,
-        //    log_console.height - 2,
-        //    self.engine.message_log.messages[: self.cursor + 1],
-        //)
         return false;
     }
 }

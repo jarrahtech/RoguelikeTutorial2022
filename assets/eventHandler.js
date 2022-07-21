@@ -101,7 +101,9 @@ export class HistoryViewerEventHandler {
     mouse(player, inputData) { }
 
     createAction(player) {
-        return new ShowMessageHistoryAction(player.engine().messages.convertTo(this.x, this.y, this.width, this.height, this.cursor), player.engine().display);      
+        return new ShowMessageHistoryAction(this.x, this.y, this.width, this.height,
+                                            player.engine().messages.convertTo(this.x+1, this.y+1, this.width-2, this.height-2, this.cursor), 
+                                            player.engine().display);      
     }
 
     dispatch(player, inputData, initial = false) {
