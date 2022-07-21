@@ -8,24 +8,26 @@ import { HpBar } from "./renderUtil.js";
 import { MessageLog, InfoLine } from './messages.js';
 import { welcomeColor } from './color.js';
 
-const options = {
+export const conf = {
     width: 60,
     uiHeight: 10,
     dungeonHeight: 40,
-    calcHeight() { this.height = this.dungeonHeight + this.uiHeight },
     forceSquareRatio: true,
-    fontSize: 16
+    fontSize: 16,
+    messageHistoryBorder: 2,
+
+    init() { this.height = this.dungeonHeight + this.uiHeight }
 }
 
 window.onload = function() {
-    options.calcHeight();
-    let display = new ROT.Display(options);
+    conf.init();
+    let display = new ROT.Display(conf);
     let player = new EntityFactory().get("player");
-    let map = new GameMap(options.width, options.dungeonHeight, player);
+    let map = new GameMap(conf.width, conf.dungeonHeight, player);
     let eventHandler = new MainEventHandler();
-    let hpBar = new HpBar(options.width/4, options.dungeonHeight+3, options.width/2, player.maxHp);
-    let messages = new MessageLog(2, options.dungeonHeight+5, options.width-4, options.uiHeight-5);
-    let engine = new Engine(player, map, eventHandler, display, hpBar, messages, new InfoLine(0, options.dungeonHeight, options.width));
+    let hpBar = new HpBar(conf.width/4, conf.dungeonHeight+3, conf.width/2, player.maxHp);
+    let messages = new MessageLog(2, conf.dungeonHeight+5, conf.width-4, conf.uiHeight-5);
+    let engine = new Engine(player, map, eventHandler, display, hpBar, messages, new InfoLine(0, conf.dungeonHeight, conf.width));
 
     engine.messages.addMessage("Hello and welcome, adventurer, to yet another dungeon!", welcomeColor);
 

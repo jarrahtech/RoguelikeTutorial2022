@@ -1,7 +1,8 @@
 "use strict";
 
-import { Action, BumpAction, WaitAction } from "./actions.js";
+import { NullAction, BumpAction, WaitAction, ShowMessageHistoryAction } from "./actions.js";
 import { Location } from "./map.js";
+import { conf } from "./game.js"
 
 export class NoEventHandler {
     dispatch(player, inputData) {
@@ -65,8 +66,63 @@ export class MainEventHandler extends NoEventHandler {
             return new BumpAction(player, this.moveKeys.get(inputData.keyCode));
         } else if (this.waitKeys.has(inputData.keyCode)) {
             return new WaitAction();
-        }        
-        return new Action(); 
+        } else if (inputData.keyCode===ROT.KEYS.VK_V) {         
+            let history = new HistoryViewerEventHandler(player.engine().messages, 
+                                    conf.messageHistoryBorder, conf.messageHistoryBorder, 
+                                    conf.width - conf.messageHistoryBorder*2, 
+                                    conf.height - conf.messageHistoryBorder*2);
+            player.engine().eventHandler = history;
+            return history.createAction(player); 
+        }       
+        return new NullAction(); 
     }  
+}
 
+export class HistoryViewerEventHandler {
+    
+    cursorKeys = new Map([
+        // Left
+        [ROT.KEYS.VK_UP, -1],
+        [ROT.KEYS.VK_DOWN, 1],
+        [ROT.KEYS.VK_PAGE_UP, -10],
+        [ROT.KEYS.VK_PAGE_DOWN, 10]
+    ]);
+
+    constructor(messageLog, x, y, width, height) {
+        this.messages = messageLog;
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+        this.maxCursor = messageLog.messages.length - 1
+        this.cursor = this.maxCursor
+    }
+
+    mouse(player, inputData) { }
+
+    createAction(player) {
+        return new ShowMessageHistoryAction(player.engine().messages.convertTo(this.x, this.y, this.width, this.height, this.cursor), player.engine().display);      
+    }
+
+    dispatch(player, inputData, initial = false) {
+        if (this.cursorKeys.has(inputData.keyCode)) {
+            let adjust = this.cursorKeys.get(inputData.keyCode)
+            if (adjust < 0 && this.cursor === 0) {
+                this.cursor = this.maxCursor
+            } else if (adjust > 0 && this.cursor === this.maxCursor) {
+                this.cursor = 0
+            } else {
+                this.cursor = Math.max(0, Math.min(this.cursor + adjust, this.maxCursor))
+            }
+        } else if (inputData.keyCode === ROT.KEYS.VK_HOME) {
+            this.cursor = 0 
+        } else if (inputData.keyCode === ROT.KEYS.VK_END) {
+            this.cursor = this.maxCursor;
+        } else {
+            player.engine().eventHandler = new MainEventHandler();
+            player.engine().render();
+            return new NullAction(); 
+        }  
+        return this.createAction(player);      
+    }
 }

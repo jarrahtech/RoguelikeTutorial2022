@@ -45,12 +45,12 @@ export class InfoLine {
 
 export class MessageLog {
 
-    constructor(x, y, width, height) {
+    constructor(x, y, width, height, messages = [] ) {
         this.x = x
         this.y = y
         this.width = width
         this.height = height
-        this.messages = []        
+        this.messages = messages        
     }
 
     addMessage(text, fg = 'white', stack = true) {
@@ -59,6 +59,12 @@ export class MessageLog {
         } else {
             this.messages.push(new Message(text, fg));
         }
+    }
+
+    convertTo(newX, newY, newWidth, newHeight, cursor) {
+        console.log(cursor);
+        console.log(this.messages.slice(0, cursor+1));
+        return new MessageLog(newX, newY, newWidth, newHeight, this.messages.slice(0, cursor+1));
     }
 
     render(display) {
