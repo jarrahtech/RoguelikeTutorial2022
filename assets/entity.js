@@ -152,6 +152,11 @@ const EntityComponents = {
                 this.engine().messages.addMessage(`${desc} but does no damage`, color);
             }
         },
+        heal(amount) {
+            let oldHp = this.currHp;
+            this.hp(this.currHp+amount);
+            return this.currHp-oldHp;
+        },
         hp(value) {
             this.currHp = Math.max(0, Math.min(value, this.maxHp));
             if (this.currHp<=0) {

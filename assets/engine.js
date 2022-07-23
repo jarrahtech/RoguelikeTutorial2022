@@ -1,5 +1,8 @@
 "use strict";
 
+import { errorColor, impossibleColor } from "./color.js";
+import { ImpossibleException } from "./exceptions.js";
+
 export class Engine {
     constructor(player, gameMap, eventHandler, display, hpBar, messages, info) {
         this.player = player;
@@ -13,16 +16,24 @@ export class Engine {
     }
 
     handleInput(inputType, inputData) {
-        inputData.preventDefault();
-        switch (inputType) {
-            case 'keydown': const action = this.eventHandler.dispatch(this.player, inputData);
-                            if (action.perform()) {
-                                this.handleEntitiesTurn();
-                                this.render();
-                            }
-                            break;
-            case 'mousemove': this.eventHandler.mouse(this.player, inputData); break;
-            default: break;
+        try {
+            inputData.preventDefault();
+            switch (inputType) {
+                case 'keydown': const action = this.eventHandler.dispatch(this.player, inputData);
+                                if (action.perform()) {
+                                    this.handleEntitiesTurn();
+                                    this.render();
+                                }
+                                break;
+                case 'mousemove': this.eventHandler.mouse(this.player, inputData); break;
+                default: break;
+            }
+        } catch (err) {
+            if (err instanceof ImpossibleException) {
+                this.messages.addMessage(err.message, impossibleColor)
+            } else {
+                this.messages.addMessage(err.message, errorColor)
+            }
         }
     }
 
@@ -39,7 +50,13 @@ export class Engine {
 
     handleEntitiesTurn() {
         this.gameMap.entities.forEach(e => {
-            if (e.act) e.act();
+            try {
+                if (e.act) e.act();
+            } catch (err) {
+                if (err instanceof ImpossibleException) {
+                    // ignore it
+                }
+            }
         });
     }
 }

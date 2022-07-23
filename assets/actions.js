@@ -1,5 +1,7 @@
 "use strict";
 
+import { ImpossibleException } from "./exceptions.js";
+
 export class NullAction {
     perform() {
         return false;
@@ -27,7 +29,7 @@ export class MoveAction extends ActionWithDirection {
             this.entity.moveTo(this.destination);
             return true;
         }
-        return false;
+        throw new ImpossibleException("That way is blocked.")
     }
 }
 
@@ -37,7 +39,7 @@ export class MeleeAction extends ActionWithDirection {
             this.entity.attack(this.blocker);
             return true;
         }
-        return false;
+        throw new ImpossibleException("Nothing to attack.")
     }
 }
 
