@@ -3,6 +3,7 @@
 import { inLightColor, playerAtkColor, enemyAtkColor, playerDieColor, enemyDieColor } from './color.js';
 import { MoveAction, MeleeAction } from './actions.js';
 import { NoEventHandler } from './eventHandler.js';
+import { ImpossibleException } from './exceptions.js';
 
 const RenderOrder = {
     CORPSE: 1,
@@ -95,6 +96,19 @@ export class EntityFactory {
                     this.power = 4;
                 }]
             ]
+        },
+        healthPotion: {
+            name: "Health Potion",
+            glyph: "!",
+            fg: "#8000ff",
+            blocker: false,
+            bg: inLightColor,
+            renderOrder: RenderOrder.ITEM,
+            components: [
+                [EntityComponents.HealingConsumable, function() {
+                    this.amount = 4;
+                }]
+            ]
         }
     };
 
@@ -171,6 +185,17 @@ const EntityComponents = {
                 this.engine().messages.addMessage(`${this.name} dies`, enemyDieColor);
             }
             this.location.map.corpsify(this);
+        }
+    },
+    HealingConsumable: {
+        amount: 0,
+        activate(action) {
+            let recovered = action.entity.fighter.heal(self.amount)
+            if (recovered > 0) {
+                this.engine().messages.addMessage( `You consume the ${this.name}, and recover ${recovered} HP!`, healthRecoveredColor )
+            } else {
+                throw new ImpossibleException("Your health is already full.")
+            }
         }
     }
 };

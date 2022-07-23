@@ -157,6 +157,7 @@ export class GameMap {
     placeEntities(maxPerRoom, factory) {
         var monsters = {
             orc: 4,
+            healthPotion: 2,
             troll: 1
         }
         this.map.getRooms().forEach(r => {

@@ -53,6 +53,22 @@ export class BumpAction extends ActionWithDirection {
     }
 }
 
+export class ItemAction {
+    constructor(entity, item, target = entity.location) {
+        this.entity = entity;
+        this.item = item;
+        this.target = target;
+    }
+
+    targetEntity() {
+        return this.target.blockingEntity();
+    }
+
+    perform() {
+        this.item.activate(this);
+    }
+}
+
 export class ShowMessageHistoryAction {
     constructor(x, y, width, height, messages, display) {
         this.messages = messages;
