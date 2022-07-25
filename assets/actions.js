@@ -1,6 +1,7 @@
 "use strict";
 
 import { ImpossibleException } from "./exceptions.js";
+import { PlayerListEventHandler } from "./eventHandler.js"
 
 export class NullAction {
     perform() {
@@ -81,19 +82,84 @@ export class ShowMessageHistoryAction {
 
     perform() {
         this.display.clear();
-        for (let i=0; i<this.width; i++) {
-            this.display.draw(this.x+i, this.y, " ", null, 'grey');
-            this.display.draw(this.x+i, this.y+this.height-1, " ", null, 'grey');
-        }
-        for (let i=1; i<this.height-1; i++) {
-            this.display.draw(this.x, this.y+i, " ", null, 'grey');
-            this.display.draw(this.x+this.width-1, this.y+i, " ", null, 'grey');
-        }
-        const title = "Message History"
-        for (let i=0; i<title.length; i++) {
-            this.display.drawOver(this.x+2+i, this.y, title[i], 'white', null);
-        }
+        this.display.drawBox(this.x, this.y, this.width, this.height, "Message History", false);
         this.messages.render(this.display);
         return false;
+    }
+}
+
+class ListAction {
+    startCode = "a".charCodeAt(0)
+
+    perform() {
+        switch (this.items.length) {
+            case 0: throw new ImpossibleException(`Nothing to ${this.actionName}.`)   
+            case 1: this.action(this.items[0]); return true;
+            default: 
+                let x = this.entity.location.x<30?31:0;
+                let y = 0;
+                let display = this.entity.engine().display;
+                display.drawBox(x, y, this.title.length+4, this.items.length+2, this.title);
+                this.items.forEach((e, i) => {
+                    display.draw(x+1, y+1+i, String.fromCharCode(this.startCode + i), 'white', null);
+                    for (let j=0; j<e.name.length; j++) {
+                        display.drawOver(x+3+j, y+1+i, e.name[j], 'white', null);
+                    }
+                });
+                this.entity.engine().eventHandler = new PlayerListEventHandler(this.entity, this.items, this.action);
+                return false;
+        }      
+    }
+}
+
+export class DropAction extends ListAction {
+    actionName = "drop";
+    title = "Select an item to drop"
+
+    constructor(entity) {
+        super();
+        this.entity = entity;
+        if (entity.items) {
+            this.items = entity.items;
+            this.action = this.entity.drop.bind(entity);
+        } else {
+            throw new ImpossibleException("No inventory")  
+        }
+    }   
+}
+
+export class PickupAction extends ListAction {
+    actionName = "pickup";
+    title = "Select an item to pickup"
+
+    constructor(entity) {
+        super();
+        this.entity = entity;
+        if (entity.items) {
+            this.items = entity.location.items();
+            this.action = this.entity.pickup.bind(entity);
+        } else {
+            throw new ImpossibleException("No inventory")  
+        }
+    }
+}
+
+export class UseAction extends ListAction {
+    actionName = "use";
+    title = "Select an item to use"
+
+    constructor(entity) {
+        super();
+        this.entity = entity;
+        if (entity.items) {
+            this.items = entity.items;
+            this.action = this.use.bind(this);
+        } else {
+            throw new ImpossibleException("No inventory")  
+        }
+    }
+
+    use(item) {
+        item.activate(this);
     }
 }

@@ -1,12 +1,13 @@
 "use strict";
 
-import { NullAction, BumpAction, WaitAction, ShowMessageHistoryAction } from "./actions.js";
+import { NullAction, BumpAction, WaitAction, ShowMessageHistoryAction, DropAction, PickupAction, UseAction } from "./actions.js";
 import { Location } from "./map.js";
 import { conf } from "./game.js"
+import { ImpossibleException } from "./exceptions.js";
 
 export class NoEventHandler {
     dispatch(player, inputData) {
-        return new Action();
+        return new NullAction();
     }
 
     mouse(player, inputData) {
@@ -73,9 +74,43 @@ export class MainEventHandler extends NoEventHandler {
                                     conf.height - conf.messageHistoryBorder*2);
             player.engine().eventHandler = history;
             return history.createAction(player); 
-        }       
+        } else if (inputData.keyCode===ROT.KEYS.VK_L) {
+            return new DropAction(player);
+        } else if (inputData.keyCode===ROT.KEYS.VK_P) {
+            return new PickupAction(player);
+        } else if (inputData.keyCode===ROT.KEYS.VK_U) {
+            return new UseAction(player);
+        }    
         return new NullAction(); 
     }  
+}
+
+export class PlayerListEventHandler {
+
+    constructor(entity, list, itemAction) {
+        this.entity = entity;
+        this.list = list;
+        this.itemAction = itemAction;
+    }
+
+    mouse(player, inputData) { }
+
+    dispatch(player, inputData) {
+        let index = inputData.key.charCodeAt(0)-"a".charCodeAt(0)
+        if (index>=0 && index<26) {
+            if (index<this.list.length) {
+                this.itemAction(this.list[index]);
+                player.engine().eventHandler = new MainEventHandler();
+                return new WaitAction();
+            } else {
+                throw new ImpossibleException("Invalid entry.");
+            }
+        } else {
+            player.engine().eventHandler = new MainEventHandler();
+            player.engine().render();
+            return new NullAction(); 
+        }
+    }
 }
 
 export class HistoryViewerEventHandler {
@@ -106,7 +141,7 @@ export class HistoryViewerEventHandler {
                                             player.engine().display);      
     }
 
-    dispatch(player, inputData, initial = false) {
+    dispatch(player, inputData) {
         if (this.cursorKeys.has(inputData.keyCode)) {
             let adjust = this.cursorKeys.get(inputData.keyCode)
             if (adjust < 0 && this.cursor === 0) {

@@ -62,9 +62,15 @@ export class MessageLog {
     }
 
     convertTo(newX, newY, newWidth, newHeight, cursor) {
-        console.log(cursor);
-        console.log(this.messages.slice(0, cursor+1));
         return new MessageLog(newX, newY, newWidth, newHeight, this.messages.slice(0, cursor+1));
+    }
+
+    clear(display) {
+        for (let i=0; i<this.width; i++) {
+            for (let j=0; j<this.height; j++) {
+                display.draw(this.x+i, this.y+j, " ", null, null);    
+            }
+        }
     }
 
     render(display) {

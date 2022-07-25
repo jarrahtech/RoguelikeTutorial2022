@@ -53,6 +53,16 @@ export class Location {
         return null;
     }
 
+    items() {
+        let result = [];
+        for (let entity of this.map.entities) {
+            if (entity.isItem() && entity.location.equiv(this)) {
+                result.push(entity);
+            }
+        }
+        return result;
+    }
+
     equiv(other) {
         return this.x===other.x && this.y===other.y;
     }
@@ -164,22 +174,29 @@ export class GameMap {
             for (let i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
                 let location = this.randomRoomPosition(r);
                 if (location.blockingEntity()==null) {
-                    let e = factory.get(ROT.RNG.getWeightedValue(monsters));
-                    e.moveTo(location);
-                    this.entities.push(e);
+                    this.add(factory.get(ROT.RNG.getWeightedValue(monsters)), location, false);
                 }
             }
         });
     }
 
-    corpsify(entity) {
+    remove(entity) {
         let idx = this.entities.indexOf(entity);
         this.entities.splice(idx, 1);
-        let corpse = this.factory.get("corpse");
-        corpse.moveTo(entity.location);
-        corpse.name += entity.name;
-        this.entities.push(corpse);
-        this.entities.sort(compareEntityRenderOrder);
+    }
+
+    add(entity, location, sort = true) {
+        this.entities.push(entity);
+        entity.moveTo(location);
+        if (sort) {
+            this.entities.sort(compareEntityRenderOrder); 
+        }
+        return entity;
+    }
+
+    corpsify(entity) {
+        this.remove(entity);
+        this.add(this.factory.get("corpse"), entity.location).name += entity.name;
     }
 
     tileAt(location) {

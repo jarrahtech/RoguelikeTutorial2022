@@ -41,5 +41,24 @@ window.onload = function() {
 
     document.body.appendChild(display.getContainer());
 
+    display.drawBox = function(x, y, width, height, title, clear=true, fg='grey', titleColor='white', clearColor='black') {
+        for (let i=0; i<width; i++) {
+            this.draw(x+i, y, " ", null, fg);
+            this.draw(x+i, y+height-1, " ", null, fg);
+        }
+        for (let i=1; i<height-1; i++) {
+            this.draw(x, y+i, " ", null, fg);
+            this.draw(x+width-1, y+i, " ", null, fg);
+            if (clear) {
+                for (let j=1; j<width-1; j++) {
+                    this.draw(x+j, y+i, " ", null, clearColor);
+                }
+            }
+        }
+        for (let i=0; i<title.length; i++) {
+            this.drawOver(x+2+i, y, title[i], titleColor, null);
+        }
+    }
+
     engine.render();
 };

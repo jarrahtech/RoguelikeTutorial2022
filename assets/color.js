@@ -18,3 +18,6 @@ export const healthRecoveredColor = '#00FF00';
 export const barColor = 'white';
 export const barFilledColor = '#006000';
 export const barEmptyColor = '#601010';
+
+export const needsTargetColor = '#3FFFFF';
+export const statusEffectAppliedColor = '#3FFF3F';

@@ -33,7 +33,10 @@ export class Engine {
                 this.messages.addMessage(err.message, impossibleColor)
             } else {
                 this.messages.addMessage(err.message, errorColor)
+                console.log(err);
             }
+            this.messages.clear(this.display);
+            this.messages.render(this.display);
         }
     }
 

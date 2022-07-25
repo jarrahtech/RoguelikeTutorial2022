@@ -1,6 +1,6 @@
 "use strict";
 
-import { inLightColor, playerAtkColor, enemyAtkColor, playerDieColor, enemyDieColor } from './color.js';
+import { inLightColor, playerAtkColor, enemyAtkColor, playerDieColor, enemyDieColor, healthRecoveredColor } from './color.js';
 import { MoveAction, MeleeAction } from './actions.js';
 import { NoEventHandler } from './eventHandler.js';
 import { ImpossibleException } from './exceptions.js';
@@ -31,6 +31,10 @@ class Entity {
         this.location = destination;
     }
 
+    isItem() {
+        return this.renderOrder===RenderOrder.ITEM;
+    }
+
     render(display) {
         if (this.location.isVisible()) {
             display.draw(this.location.x, this.location.y, this.glyph, this.fg, this.bg);
@@ -53,6 +57,9 @@ export class EntityFactory {
                     this.maxHp = this.currHp = 30;
                     this.defense = 2;
                     this.power = 5;
+                }],
+                [EntityComponents.Inventory, function() {
+                    this.capacity = 26;
                 }]
             ]
         }, 
@@ -190,12 +197,31 @@ const EntityComponents = {
     HealingConsumable: {
         amount: 0,
         activate(action) {
-            let recovered = action.entity.fighter.heal(self.amount)
+            let recovered = action.entity.heal(this.amount)
             if (recovered > 0) {
-                this.engine().messages.addMessage( `You consume the ${this.name}, and recover ${recovered} HP!`, healthRecoveredColor )
+                this.engine().messages.addMessage(`You consume the ${this.name}, and recover ${recovered} HP!`, healthRecoveredColor )
             } else {
                 throw new ImpossibleException("Your health is already full.")
             }
+            action.entity.items.splice(action.entity.items.indexOf(this), 1);
+        }
+    },
+    Inventory: {
+        capacity: 0,
+        items: [],
+        drop(item) {
+            this.items.splice(this.items.indexOf(item), 1);
+            item.location.map.add(item, this.location);
+            this.engine().messages.addMessage(`You dropped the ${item.name}.`);
+        },
+        pickup(item) {
+            if (this.items.length+1<this.capacity) {
+                this.location.map.remove(item);
+                this.items.push(item);
+                this.engine().messages.addMessage(`You pickup the ${item.name}.`);
+            } else {
+                throw new ImpossibleException("You are carrying too much already!")
+            }          
         }
     }
 };
