@@ -5,13 +5,22 @@ import { Location } from "./map.js";
 import { conf } from "./game.js"
 import { ImpossibleException } from "./exceptions.js";
 
+let toMain = function(engine) {
+    engine.eventHandler = new MainEventHandler();
+    engine.render();
+    return new NullAction();   
+}
+
 export class NoEventHandler {
     dispatch(player, inputData) {
         return new NullAction();
     }
 
     mouse(player, inputData) {
-        const [x, y] = player.engine().display.eventToPosition(inputData);
+        this.lookAt(player, ...player.engine().display.eventToPosition(inputData))
+    }
+
+    lookAt(player, x, y) {
         const mouseLoc = new Location(x, y, player.location.map);
         if (mouseLoc.isVisible()) {
             const line = ROT.Util.capitalize(mouseLoc.entities().map(e => e.name).join(", "));
@@ -20,42 +29,43 @@ export class NoEventHandler {
     }
 }
 
+const moveKeys = new Map([
+    // Left
+    [ROT.KEYS.VK_LEFT, [-1, 0]],
+    [ROT.KEYS.VK_A, [-1, 0]],
+    [ROT.KEYS.VK_KEYPAD4, [-1, 0]],
+    // Right
+    [ROT.KEYS.VK_RIGHT, [1, 0]],
+    [ROT.KEYS.VK_D, [1, 0]],
+    [ROT.KEYS.VK_KEYPAD6, [1, 0]],
+    // Up
+    [ROT.KEYS.VK_UP, [0, -1]],
+    [ROT.KEYS.VK_W, [0, -1]],
+    [ROT.KEYS.VK_KEYPAD8, [0, -1]],
+    // Down
+    [ROT.KEYS.VK_DOWN, [0, 1]],
+    [ROT.KEYS.VK_S, [0, 1]],
+    [ROT.KEYS.VK_KEYPAD2, [0, 1]],
+    // Up Left
+    [ROT.KEYS.VK_HOME, [-1, -1]],
+    [ROT.KEYS.VK_Q, [-1, -1]],
+    [ROT.KEYS.VK_KEYPAD7, [-1, -1]],
+    // Up Right
+    [ROT.KEYS.VK_PAGE_UP, [1, -1]],
+    [ROT.KEYS.VK_E, [1, -1]],
+    [ROT.KEYS.VK_KEYPAD9, [1, -1]],
+    // Down Right
+    [ROT.KEYS.VK_PAGE_DOWN, [1, 1]],
+    [ROT.KEYS.VK_X, [1, 1]],
+    [ROT.KEYS.VK_KEYPAD3, [1, 1]],
+    // Down Left
+    [ROT.KEYS.VK_END, [-1, 1]],
+    [ROT.KEYS.VK_Z, [-1, 1]],
+    [ROT.KEYS.VK_KEYPAD1, [-1, 1]]
+]);
+
 export class MainEventHandler extends NoEventHandler {
 
-    moveKeys = new Map([
-        // Left
-        [ROT.KEYS.VK_LEFT, [-1, 0]],
-        [ROT.KEYS.VK_A, [-1, 0]],
-        [ROT.KEYS.VK_KEYPAD4, [-1, 0]],
-        // Right
-        [ROT.KEYS.VK_RIGHT, [1, 0]],
-        [ROT.KEYS.VK_D, [1, 0]],
-        [ROT.KEYS.VK_KEYPAD6, [1, 0]],
-        // Up
-        [ROT.KEYS.VK_UP, [0, -1]],
-        [ROT.KEYS.VK_W, [0, -1]],
-        [ROT.KEYS.VK_KEYPAD8, [0, -1]],
-        // Down
-        [ROT.KEYS.VK_DOWN, [0, 1]],
-        [ROT.KEYS.VK_S, [0, 1]],
-        [ROT.KEYS.VK_KEYPAD2, [0, 1]],
-        // Up Left
-        [ROT.KEYS.VK_HOME, [-1, -1]],
-        [ROT.KEYS.VK_Q, [-1, -1]],
-        [ROT.KEYS.VK_KEYPAD7, [-1, -1]],
-        // Up Right
-        [ROT.KEYS.VK_PAGE_UP, [1, -1]],
-        [ROT.KEYS.VK_E, [1, -1]],
-        [ROT.KEYS.VK_KEYPAD9, [1, -1]],
-        // Down Right
-        [ROT.KEYS.VK_PAGE_DOWN, [1, 1]],
-        [ROT.KEYS.VK_X, [1, 1]],
-        [ROT.KEYS.VK_KEYPAD3, [1, 1]],
-        // Down Left
-        [ROT.KEYS.VK_END, [-1, 1]],
-        [ROT.KEYS.VK_Z, [-1, 1]],
-        [ROT.KEYS.VK_KEYPAD1, [-1, 1]]
-    ]);
     waitKeys = new Set([
         ROT.KEYS.VK_PERIOD,
         ROT.KEYS.VK_INSERT,
@@ -63,8 +73,8 @@ export class MainEventHandler extends NoEventHandler {
     ]);
 
     dispatch(player, inputData) {
-        if (this.moveKeys.has(inputData.keyCode)) {
-            return new BumpAction(player, this.moveKeys.get(inputData.keyCode));
+        if (moveKeys.has(inputData.keyCode)) {
+            return new BumpAction(player, moveKeys.get(inputData.keyCode));
         } else if (this.waitKeys.has(inputData.keyCode)) {
             return new WaitAction();
         } else if (inputData.keyCode===ROT.KEYS.VK_V) {         
@@ -80,6 +90,8 @@ export class MainEventHandler extends NoEventHandler {
             return new PickupAction(player);
         } else if (inputData.keyCode===ROT.KEYS.VK_U) {
             return new UseAction(player);
+        } else if (inputData.keyCode===ROT.KEYS.VK_SLASH) {
+            player.engine().eventHandler = new LookHandler(player)
         }    
         return new NullAction(); 
     }  
@@ -106,9 +118,7 @@ export class PlayerListEventHandler {
                 throw new ImpossibleException("Invalid entry.");
             }
         } else {
-            player.engine().eventHandler = new MainEventHandler();
-            player.engine().render();
-            return new NullAction(); 
+            return toMain(player.engine()); 
         }
     }
 }
@@ -161,5 +171,71 @@ export class HistoryViewerEventHandler {
             return new NullAction(); 
         }  
         return this.createAction(player);      
+    }
+}
+
+class SelectIndexHandler extends NoEventHandler {
+
+    confirmKeys = new Set([
+        ROT.KEYS.VK_RETURN,
+        ROT.KEYS.VK_ENTER
+    ])
+
+    constructor(player) {
+        super();
+        this.mouseLocation = player.location;
+        this.renderCursor(player.engine());
+    }
+
+    renderCursor(engine) {
+        engine.render();
+        engine.display.drawOver(this.mouseLocation.x, this.mouseLocation.y, "+", '#ffffff', null);
+    }
+
+    dispatch(player, inputData) {
+        if (moveKeys.has(inputData.keyCode)) {
+            let modifier = 1;
+            if (inputData.shiftKey) {
+                modifier *= 5
+            } 
+            if (inputData.ctrlKey) {
+                modifier *= 10
+            }
+            if (inputData.altKey) {
+                modifier *= 20
+            }
+
+            let [dx, dy] = moveKeys.get(inputData.keyCode)
+            let newLoc = this.mouseLocation.delta(dx * modifier, dy * modifier)        
+            this.mouseLocation = newLoc.clampToBounds();
+            this.renderCursor(player.engine())
+            return new NullAction();
+        } else if (this.confirmKeys.has(inputData.keyCode)) {
+            return this.selected(player);
+        }
+        return toMain(player.engine()); 
+    }
+
+    mouse(player, inputData) { 
+        if (inputData.buttons===1) {
+            this.selected(player);
+        }
+    }
+
+}
+
+class LookHandler extends SelectIndexHandler {
+
+    constructor(player) {
+        super(player)
+    }
+
+    renderCursor(engine) {
+        super.renderCursor(engine);
+        this.lookAt(engine.player, this.mouseLocation.x, this.mouseLocation.y)
+    }
+
+    selected(player) {
+        return toMain(player.engine())
     }
 }

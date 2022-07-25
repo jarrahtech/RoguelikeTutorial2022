@@ -34,6 +34,17 @@ export class Location {
         return this.inBounds() && this.map.tileAt(this).type.walkable;
     }
 
+    clampToBounds() {
+        if (this.inBounds()) {
+            return this;
+        } else {          
+            return new Location(
+                        Math.max(0, Math.min(this.x, this.map.width - 1)), 
+                        Math.max(0, Math.min(this.y, this.map.height - 1)),
+                        this.map);
+        }
+    }
+
     entities() {
         let result = [];
         for (let entity of this.map.entities) {
@@ -168,6 +179,7 @@ export class GameMap {
         var monsters = {
             orc: 4,
             healthPotion: 2,
+            lightningScroll: 1,
             troll: 1
         }
         this.map.getRooms().forEach(r => {

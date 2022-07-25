@@ -40,6 +40,10 @@ class Entity {
             display.draw(this.location.x, this.location.y, this.glyph, this.fg, this.bg);
         }
     }
+
+    distance(entity) {
+        return this.location.distance(entity.location);
+    }
 }
 
 export class EntityFactory {
@@ -111,11 +115,16 @@ export class EntityFactory {
             blocker: false,
             bg: inLightColor,
             renderOrder: RenderOrder.ITEM,
-            components: [
-                [EntityComponents.HealingConsumable, function() {
-                    this.amount = 4;
-                }]
-            ]
+            components: [[EntityComponents.HealingConsumable]]
+        },
+        lightningScroll: {
+            name: "Lightning Scroll",
+            glyph: "~",
+            fg: "#ffff00",
+            blocker: false,
+            bg: inLightColor,
+            renderOrder: RenderOrder.ITEM,
+            components: [[EntityComponents.LightningConsumable]]
         }
     };
 
@@ -195,15 +204,41 @@ const EntityComponents = {
         }
     },
     HealingConsumable: {
-        amount: 0,
+        amount: 4,
         activate(action) {
             let recovered = action.entity.heal(this.amount)
             if (recovered > 0) {
-                this.engine().messages.addMessage(`You consume the ${this.name}, and recover ${recovered} HP!`, healthRecoveredColor )
+                this.engine().messages.addMessage(`You consume the ${this.name}, and recover ${recovered} HP!`, healthRecoveredColor );
+                action.entity.items.splice(action.entity.items.indexOf(this), 1);
             } else {
                 throw new ImpossibleException("Your health is already full.")
+            }           
+        }
+    },
+    LightningConsumable: {
+        damage: 20,
+        maxRange: 5,
+        activate(action) {
+            let target = undefined
+            let closest = this.maxRange + 1;
+
+            for (let e of action.entity.location.map.entities) {
+                if (e!==action.entity && e.location.isVisible() && e.blocker) {
+                    let dist = action.entity.distance(e);
+                    if (dist<closest) {
+                        target=e;
+                        closest=dist;
+                    }
+                }
             }
-            action.entity.items.splice(action.entity.items.indexOf(this), 1);
+
+            if (target) {
+                this.engine().messages.addMessage(`A lighting bolt strikes the ${target.name}, for ${this.damage} damage!`)
+                target.hp(target.currHp-this.damage);
+                action.entity.items.splice(action.entity.items.indexOf(this), 1);
+            } else {
+                throw new ImpossibleException("No enemy is close enough to strike.")
+            }
         }
     },
     Inventory: {
