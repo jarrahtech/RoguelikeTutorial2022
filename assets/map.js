@@ -180,7 +180,8 @@ export class GameMap {
             orc: 4,
             healthPotion: 1,
             lightningScroll: 1,
-            confusionScroll: 4,
+            confusionScroll: 1,
+            fireballScroll: 1,
             troll: 1
         }
         this.map.getRooms().forEach(r => {

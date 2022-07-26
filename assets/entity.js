@@ -2,7 +2,7 @@
 
 import { inLight, statusEffectApplied, playerAtk, enemyAtk, enemyDie, healthRecovered, playerDie, needsTarget } from './color.js';
 import { MoveAction, MeleeAction, BumpAction, WaitAction, NullAction } from './actions.js';
-import { NoEventHandler, SingleRangedAttackHandler } from './eventHandler.js';
+import { NoEventHandler, SingleRangedAttackHandler, AreaRangedAttackHandler } from './eventHandler.js';
 import { ImpossibleException } from './exceptions.js';
 
 const RenderOrder = {
@@ -145,6 +145,15 @@ export class EntityFactory {
             bg: inLight,
             renderOrder: RenderOrder.ITEM,
             components: [[EntityComponents.ConfusionConsumable]]
+        },
+        fireballScroll: {
+            glyph: "~",
+            fg: "#ff0000",
+            name: "Fireball Scroll",
+            blocker: false,
+            bg: inLight,
+            renderOrder: RenderOrder.ITEM,
+            components: [[EntityComponents.FireballConsumable]]
         }
     };
 
@@ -233,7 +242,7 @@ const EntityComponents = {
             } else {
                 throw new ImpossibleException("Your health is already full.")
             } 
-            return true;         
+            return true;      
         }
     },
     LightningConsumable: {
@@ -257,10 +266,10 @@ const EntityComponents = {
                 this.engine().messages.addMessage(`A lighting bolt strikes the ${target.name}, for ${this.damage} damage!`)
                 target.hp(target.currHp-this.damage);
                 action.entity.remove(this);
+                return true;
             } else {
                 throw new ImpossibleException("No enemy is close enough to strike.")
             }
-            return true;
         }
     },
     Inventory: {
@@ -283,7 +292,7 @@ const EntityComponents = {
             } else {
                 throw new ImpossibleException("You are carrying too much already!")
             }   
-            return true;       
+            return true;    
         }
     },
     ConfusionConsumable: {
@@ -321,7 +330,35 @@ const EntityComponents = {
             this.action.entity.remove(this);
             return new WaitAction();
         }
-    }
+    },
+    FireballConsumable: {
+        damage: 12,
+        radius: 3,
+        activate(action) {
+            this.action = action;
+            this.engine().messages.addMessage("Select a target location.", needsTarget);
+            this.engine().eventHandler = new AreaRangedAttackHandler(this.action.entity, this.radius, this.fireball.bind(this));
+            return false;
+        },
+        fireball(loc) {
+            if (!loc.isVisible()) {
+                throw new ImpossibleException("You cannot target an area that you cannot see.")
+            }
+            let hit = false;
+            for (let e of this.action.entity.location.map.entities) {
+                if (e.blocker && e.location.distance(loc)<=this.radius) {
+                    this.engine().messages.addMessage(`The ${e.name} is engulfed in fire, taking ${this.damage} damage!`);
+                    e.hp(e.currHp-this.damage);
+                    hit = true
+                }
+            }         
+            if (!hit) {
+                throw new ImpossibleException("There are no targets in the radius.")
+            }
 
+            this.action.entity.remove(this);
+            return new WaitAction();
+        }
+    }
 };
 

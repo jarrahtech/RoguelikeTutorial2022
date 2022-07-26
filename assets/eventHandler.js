@@ -111,9 +111,9 @@ export class PlayerListEventHandler {
         let index = inputData.key.charCodeAt(0)-"a".charCodeAt(0)
         if (index>=0 && index<26) {
             if (index<this.list.length) {
-                this.itemAction(this.list[index]);
                 player.engine().eventHandler = new MainEventHandler();
-                return new WaitAction();
+                player.engine().render(player.engine().display);
+                return this.itemAction(this.list[index])?new WaitAction() : new NullAction(); 
             } else {
                 throw new ImpossibleException("Invalid entry.");
             }
@@ -189,7 +189,7 @@ class SelectIndexHandler extends NoEventHandler {
 
     renderCursor(engine) {
         engine.render();
-        engine.display.drawOver(this.mouseLocation.x, this.mouseLocation.y, "+", '#ffffff', null);
+        engine.display.drawOver(this.mouseLocation.x, this.mouseLocation.y, "+", 'white', null);
     }
 
     dispatch(player, inputData) {
@@ -245,6 +245,30 @@ export class SingleRangedAttackHandler extends SelectIndexHandler {
     constructor(player, callback) {
         super(player)
         this.callback = callback;
+    }
+
+    selected(player) {
+        toMain(player.engine(), true);
+        return this.callback(this.mouseLocation)
+    }
+}
+
+export class AreaRangedAttackHandler extends SelectIndexHandler {
+
+    constructor(player, radius, callback) {
+        super(player)
+        this.radius = radius;
+        this.callback = callback;
+        this.renderCursor(player.engine());
+    }
+
+    renderCursor(engine) {
+        super.renderCursor(engine);
+        for (let i=-this.radius; i<this.radius+1; i++) {
+            for (let j=-this.radius; j<this.radius+1; j++) {   
+                engine.display.drawOver(this.mouseLocation.x+i, this.mouseLocation.y+j, "+", 'white', null);
+            }
+        }
     }
 
     selected(player) {

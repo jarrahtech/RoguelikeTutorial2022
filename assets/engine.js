@@ -1,6 +1,7 @@
 "use strict";
 
 import * as color from "./color.js";
+import { MainEventHandler } from "./eventHandler.js";
 import { ImpossibleException } from "./exceptions.js";
 
 export class Engine {
