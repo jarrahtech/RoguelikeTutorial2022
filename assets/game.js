@@ -6,7 +6,7 @@ import { GameMap } from './map.js';
 import { EntityFactory } from './entity.js';
 import { HpBar } from "./renderUtil.js";
 import { MessageLog, InfoLine } from './messages.js';
-import { welcomeColor } from './color.js';
+import { welcome } from './color.js';
 
 export const conf = {
     width: 60,
@@ -29,7 +29,7 @@ window.onload = function() {
     let messages = new MessageLog(2, conf.dungeonHeight+5, conf.width-4, conf.uiHeight-5);
     let engine = new Engine(player, map, eventHandler, display, hpBar, messages, new InfoLine(0, conf.dungeonHeight, conf.width));
 
-    engine.messages.addMessage("Hello and welcome, adventurer, to yet another dungeon!", welcomeColor);
+    engine.messages.addMessage("Hello and welcome, adventurer, to yet another dungeon!", welcome);
 
     let bindEventToScreen = function(event) {
         window.addEventListener(event, function(e) {

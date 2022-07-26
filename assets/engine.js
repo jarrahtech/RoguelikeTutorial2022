@@ -1,6 +1,6 @@
 "use strict";
 
-import { errorColor, impossibleColor } from "./color.js";
+import * as color from "./color.js";
 import { ImpossibleException } from "./exceptions.js";
 
 export class Engine {
@@ -30,9 +30,9 @@ export class Engine {
             }
         } catch (err) {
             if (err instanceof ImpossibleException) {
-                this.messages.addMessage(err.message, impossibleColor)
+                this.messages.addMessage(err.message, color.impossible)
             } else {
-                this.messages.addMessage(err.message, errorColor)
+                this.messages.addMessage(err.message, color.error)
                 console.log(err);
             }
             this.messages.clear(this.display);

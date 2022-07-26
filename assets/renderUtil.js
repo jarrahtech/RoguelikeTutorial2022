@@ -1,10 +1,10 @@
 "use strict";
 
-import { barFilledColor, barEmptyColor, barColor } from './color.js';
+import * as color from './color.js';
 
 export class HpBar {
 
-    constructor(x, y, width, max, fg = barFilledColor, bg = barEmptyColor, txt = barColor) {
+    constructor(x, y, width, max, fg = color.barFilled, bg = color.barEmpty, txt = color.bar) {
         this.x = x;
         this.y = y;
         this.width = width;

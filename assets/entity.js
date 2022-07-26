@@ -1,8 +1,8 @@
 "use strict";
 
-import { inLightColor, playerAtkColor, enemyAtkColor, playerDieColor, enemyDieColor, healthRecoveredColor } from './color.js';
-import { MoveAction, MeleeAction } from './actions.js';
-import { NoEventHandler } from './eventHandler.js';
+import { inLight, statusEffectApplied, playerAtk, enemyAtk, enemyDie, healthRecovered, playerDie, needsTarget } from './color.js';
+import { MoveAction, MeleeAction, BumpAction, WaitAction, NullAction } from './actions.js';
+import { NoEventHandler, SingleRangedAttackHandler } from './eventHandler.js';
 import { ImpossibleException } from './exceptions.js';
 
 const RenderOrder = {
@@ -11,6 +11,17 @@ const RenderOrder = {
     ACTOR: 3
 };
 Object.freeze(RenderOrder);
+
+const directions = [
+    [-1, -1],  
+    [0, -1], 
+    [1, -1],  
+    [-1, 0], 
+    [1, 0], 
+    [-1, 1], 
+    [0, 1],  
+    [1, 1] 
+]
 
 class Entity {
 
@@ -53,7 +64,7 @@ export class EntityFactory {
             name: "Player",
             glyph: "@",
             fg: 'white',
-            bg: inLightColor,
+            bg: inLight,
             renderOrder: RenderOrder.ACTOR,
             blocker: true,
             components: [
@@ -71,7 +82,7 @@ export class EntityFactory {
             name: "Remains of ",
             glyph: "%",
             fg: 'red',
-            bg: inLightColor,
+            bg: inLight,
             renderOrder: RenderOrder.CORPSE,
             blocker: false,
             components: []
@@ -80,7 +91,7 @@ export class EntityFactory {
             name: "Orc",
             glyph: "o",
             fg: 'white',
-            bg: inLightColor,
+            bg: inLight,
             renderOrder: RenderOrder.ACTOR,
             blocker: true,
             components: [
@@ -96,7 +107,7 @@ export class EntityFactory {
             name: "Troll",
             glyph: "T",
             fg: 'white',
-            bg: inLightColor,
+            bg: inLight,
             renderOrder: RenderOrder.ACTOR,
             blocker: true,
             components: [
@@ -113,7 +124,7 @@ export class EntityFactory {
             glyph: "!",
             fg: "#8000ff",
             blocker: false,
-            bg: inLightColor,
+            bg: inLight,
             renderOrder: RenderOrder.ITEM,
             components: [[EntityComponents.HealingConsumable]]
         },
@@ -122,9 +133,18 @@ export class EntityFactory {
             glyph: "~",
             fg: "#ffff00",
             blocker: false,
-            bg: inLightColor,
+            bg: inLight,
             renderOrder: RenderOrder.ITEM,
             components: [[EntityComponents.LightningConsumable]]
+        },
+        confusionScroll: {
+            name: "Confusion Scroll",
+            glyph: "~",
+            fg: "#e063ff",
+            blocker: false,
+            bg: inLight,
+            renderOrder: RenderOrder.ITEM,
+            components: [[EntityComponents.ConfusionConsumable]]
         }
     };
 
@@ -173,7 +193,7 @@ const EntityComponents = {
         power: 0,
         attack(target) {
             let damage = this.power - target.defense;
-            let color = this.engine().player===this?playerAtkColor:enemyAtkColor;
+            let color = this.engine().player===this?playerAtk:enemyAtk;
             let desc = `${this.name} attacks the ${target.name}`;
             if (damage>0) {
                 this.engine().messages.addMessage(`${desc} for ${damage} hit points`, color);
@@ -195,10 +215,10 @@ const EntityComponents = {
         },
         die() {
             if (this===this.location.map.player) {
-                this.engine().messages.addMessage("You died", playerDieColor);
+                this.engine().messages.addMessage("You died", playerDie);
                 this.engine().eventHandler = new NoEventHandler();
             } else {
-                this.engine().messages.addMessage(`${this.name} dies`, enemyDieColor);
+                this.engine().messages.addMessage(`${this.name} dies`, enemyDie);
             }
             this.location.map.corpsify(this);
         }
@@ -208,11 +228,12 @@ const EntityComponents = {
         activate(action) {
             let recovered = action.entity.heal(this.amount)
             if (recovered > 0) {
-                this.engine().messages.addMessage(`You consume the ${this.name}, and recover ${recovered} HP!`, healthRecoveredColor );
-                action.entity.items.splice(action.entity.items.indexOf(this), 1);
+                this.engine().messages.addMessage(`You consume the ${this.name}, and recover ${recovered} HP!`, healthRecovered);
+                action.entity.remove(this);
             } else {
                 throw new ImpossibleException("Your health is already full.")
-            }           
+            } 
+            return true;         
         }
     },
     LightningConsumable: {
@@ -235,19 +256,24 @@ const EntityComponents = {
             if (target) {
                 this.engine().messages.addMessage(`A lighting bolt strikes the ${target.name}, for ${this.damage} damage!`)
                 target.hp(target.currHp-this.damage);
-                action.entity.items.splice(action.entity.items.indexOf(this), 1);
+                action.entity.remove(this);
             } else {
                 throw new ImpossibleException("No enemy is close enough to strike.")
             }
+            return true;
         }
     },
     Inventory: {
         capacity: 0,
         items: [],
         drop(item) {
-            this.items.splice(this.items.indexOf(item), 1);
+            this.remove(item);
             item.location.map.add(item, this.location);
             this.engine().messages.addMessage(`You dropped the ${item.name}.`);
+            return true;
+        },
+        remove(item) {
+            this.items.splice(this.items.indexOf(item), 1);
         },
         pickup(item) {
             if (this.items.length+1<this.capacity) {
@@ -256,8 +282,46 @@ const EntityComponents = {
                 this.engine().messages.addMessage(`You pickup the ${item.name}.`);
             } else {
                 throw new ImpossibleException("You are carrying too much already!")
-            }          
+            }   
+            return true;       
+        }
+    },
+    ConfusionConsumable: {
+        turns: 10,
+        activate(action) {
+            this.action = action;
+            this.engine().messages.addMessage("Select a target location.", needsTarget);
+            this.engine().eventHandler = new SingleRangedAttackHandler(this.action.entity, this.confuse.bind(this));
+            return false;
+        },
+        confuse(loc) {
+            let target = loc.blockingEntity();
+            if (!loc.isVisible()) {
+                throw new ImpossibleException("You cannot target an area that you cannot see.")
+            } else if (!target) {
+                throw new ImpossibleException("You must select an enemy to target.")
+            } else if (target===this.action.entity) {
+                throw new ImpossibleException("You cannot confuse yourself!")
+            }
+            this.engine().messages.addMessage(`The ${target.name}'s eyes look empty, as it starts to stumble!`, statusEffectApplied);
+
+            target.confusedTurns =this.turns;
+            target.originalAct = target.act;
+            target.act = function() {
+                if (this.confusedTurns <= 0) {
+                    this.engine().messages.addMessage(`The ${this.name} is no longer confused.`)
+                    this.act = this.originalAct;
+                    this.originalAct = undefined;
+                } else {
+                    let delta = directions[this.location.map.randInt(0, directions.length)];
+                    this.confusedTurns -= 1
+                    new BumpAction(this, delta).perform()
+                }    
+            }
+            this.action.entity.remove(this);
+            return new WaitAction();
         }
     }
+
 };
 

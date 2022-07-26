@@ -94,7 +94,7 @@ class ListAction {
     perform() {
         switch (this.items.length) {
             case 0: throw new ImpossibleException(`Nothing to ${this.actionName}.`)   
-            case 1: this.action(this.items[0]); return true;
+            case 1: return this.action(this.items[0]); 
             default: 
                 let x = this.entity.location.x<30?31:0;
                 let y = 0;
@@ -160,6 +160,6 @@ export class UseAction extends ListAction {
     }
 
     use(item) {
-        item.activate(this);
+        return item.activate(this);
     }
 }

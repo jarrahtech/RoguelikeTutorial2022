@@ -5,10 +5,10 @@ import { Location } from "./map.js";
 import { conf } from "./game.js"
 import { ImpossibleException } from "./exceptions.js";
 
-let toMain = function(engine) {
+let toMain = function(engine, takeTurn=false) {
     engine.eventHandler = new MainEventHandler();
     engine.render();
-    return new NullAction();   
+    return takeTurn?new WaitAction() : new NullAction();   
 }
 
 export class NoEventHandler {
@@ -237,5 +237,18 @@ class LookHandler extends SelectIndexHandler {
 
     selected(player) {
         return toMain(player.engine())
+    }
+}
+
+export class SingleRangedAttackHandler extends SelectIndexHandler {
+
+    constructor(player, callback) {
+        super(player)
+        this.callback = callback;
+    }
+
+    selected(player) {
+        toMain(player.engine(), true);
+        return this.callback(this.mouseLocation)
     }
 }

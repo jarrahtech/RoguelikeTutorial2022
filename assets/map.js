@@ -1,7 +1,7 @@
 "use strict";
 
 import { EntityFactory } from './entity.js';
-import { inLightColor } from './color.js';
+import { inLight } from './color.js';
 
 export class Location {
     constructor(x, y, map) {
@@ -121,7 +121,7 @@ export class TileType {
     }  
 }
 
-const floor = new TileType(new TileDisplay(" ", 'black', inLightColor), new TileDisplay(" ", 'black', '#777777aa'), new TileDisplay(" ", 'black', 'black'), true, true)
+const floor = new TileType(new TileDisplay(" ", 'black', inLight), new TileDisplay(" ", 'black', '#777777aa'), new TileDisplay(" ", 'black', 'black'), true, true)
 const wall = new TileType(new TileDisplay(" ", 'black', '#cccccc'), new TileDisplay(" ", 'black', '#cccccc'), new TileDisplay(" ", 'black', 'black'), false, false);
 
 export class Tile {
@@ -178,8 +178,9 @@ export class GameMap {
     placeEntities(maxPerRoom, factory) {
         var monsters = {
             orc: 4,
-            healthPotion: 2,
+            healthPotion: 1,
             lightningScroll: 1,
+            confusionScroll: 4,
             troll: 1
         }
         this.map.getRooms().forEach(r => {
