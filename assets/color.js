@@ -21,3 +21,7 @@ export const barEmpty = '#601010';
 
 export const needsTarget = '#3FFFFF';
 export const statusEffectApplied = '#3FFF3F';
+
+export const menuTitle = '#ffff43';
+export const menuText = 'white';
+export const descend = '#9F3FFF';

@@ -1,6 +1,6 @@
 "use strict";
 
-import { NullAction, BumpAction, WaitAction, ShowMessageHistoryAction, DropAction, PickupAction, UseAction } from "./actions.js";
+import { NullAction, BumpAction, WaitAction, ShowMessageHistoryAction, DropAction, PickupAction, UseAction, TakeStairsAction } from "./actions.js";
 import { Location } from "./map.js";
 import { conf } from "./game.js"
 import { ImpossibleException } from "./exceptions.js";
@@ -75,6 +75,8 @@ export class MainEventHandler extends NoEventHandler {
     dispatch(player, inputData) {
         if (moveKeys.has(inputData.keyCode)) {
             return new BumpAction(player, moveKeys.get(inputData.keyCode));
+        } else if (inputData.shiftKey && (inputData.keyCode===ROT.KEYS.VK_PERIOD || inputData.keyCode===ROT.KEYS.VK_COMMA)) {
+            return new TakeStairsAction(player);
         } else if (this.waitKeys.has(inputData.keyCode)) {
             return new WaitAction();
         } else if (inputData.keyCode===ROT.KEYS.VK_V) {         
@@ -92,7 +94,7 @@ export class MainEventHandler extends NoEventHandler {
             return new UseAction(player);
         } else if (inputData.keyCode===ROT.KEYS.VK_SLASH) {
             player.engine().eventHandler = new LookHandler(player)
-        }    
+        } 
         return new NullAction(); 
     }  
 }

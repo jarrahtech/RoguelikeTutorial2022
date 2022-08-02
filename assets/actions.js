@@ -2,6 +2,7 @@
 
 import { ImpossibleException } from "./exceptions.js";
 import { PlayerListEventHandler } from "./eventHandler.js"
+import * as color from "./color.js";
 
 export class NullAction {
     perform() {
@@ -140,6 +141,25 @@ export class PickupAction extends ListAction {
             this.action = this.entity.pickup.bind(entity);
         } else {
             throw new ImpossibleException("No inventory")  
+        }
+    }
+}
+
+export class TakeStairsAction {
+    constructor(entity) {
+        this.entity = entity;
+    }
+    perform() {
+        if (this.entity.location.isDownstairs()) { 
+            this.entity.engine().goDown() 
+            this.entity.engine().messages.addMessage( "You descend the staircase.", color.descend);
+            return true;
+        } else if (this.entity.location.isUpstairs()) { 
+            this.entity.engine().goUp() 
+            this.entity.engine().messages.addMessage( "You ascend the staircase.", color.descend);
+            return true;
+        } else {
+            throw new ImpossibleException("There are no stairs here.")
         }
     }
 }

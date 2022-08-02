@@ -34,6 +34,14 @@ export class Location {
         return this.inBounds() && this.map.tileAt(this).type.walkable;
     }
 
+    isDownstairs() {
+        return this.inBounds() && this.map.tileAt(this).type === downstairs;
+    }
+
+    isUpstairs() {
+        return this.inBounds() && this.map.tileAt(this).type === upstairs;
+    }
+
     clampToBounds() {
         if (this.inBounds()) {
             return this;
@@ -123,6 +131,8 @@ export class TileType {
 
 const floor = new TileType(new TileDisplay(" ", 'black', inLight), new TileDisplay(" ", 'black', '#777777aa'), new TileDisplay(" ", 'black', 'black'), true, true)
 const wall = new TileType(new TileDisplay(" ", 'black', '#cccccc'), new TileDisplay(" ", 'black', '#cccccc'), new TileDisplay(" ", 'black', 'black'), false, false);
+const downstairs = new TileType(new TileDisplay(">", 'white', inLight), new TileDisplay(">", '#cccccc', '#777777aa'), new TileDisplay(" ", 'black', 'black'), true, true)
+const upstairs = new TileType(new TileDisplay("<", 'white', inLight), new TileDisplay("<", '#cccccc', '#777777aa'), new TileDisplay(" ", 'black', 'black'), true, true)
 
 export class Tile {
     constructor(type) {
@@ -156,16 +166,26 @@ let compareEntityRenderOrder = function(a, b) {
 
 export class GameMap {
 
-    constructor(width, height, player) {
+    constructor(level, width, height, player) {
+        this.level = level;
         this.width = width;
         this.height = height;
         this.map = new ROT.Map.Digger(width, height);       
         this.tiles = Array.from(Array(width), () => new Array(height));
         this.map.create((x, y, value) => {
             this.tiles[x][y] = new Tile((value === 0)?floor:wall);
-        });
+        });       
         this.player = player;
         player.moveTo(this.randomPosition());
+        this.downPosition = player.location;
+        while (this.downPosition === player.location) {
+            this.downPosition = this.randomPosition();
+        }
+        this.tiles[this.downPosition.x][this.downPosition.y] = new Tile(downstairs);
+        if (level>0) {
+            this.upPosition = player.location;
+            this.tiles[this.upPosition.x][this.upPosition.y] = new Tile(upstairs);
+        }
         this.entities = [player];
         this.factory = new EntityFactory();
         this.placeEntities(2, this.factory);  
