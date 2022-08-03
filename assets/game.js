@@ -23,7 +23,7 @@ window.onload = function() {
     let display = new ROT.Display(conf);
     let player = new EntityFactory().get("player");
     let eventHandler = new MainEventHandler();
-    let hpBar = new HpBar(conf.width/4, conf.dungeonHeight+3, conf.width/2, player.maxHp);
+    let hpBar = new HpBar(conf.width/4, conf.dungeonHeight+3, conf.width/2);
     let messages = new MessageLog(2, conf.dungeonHeight+5, conf.width-4, conf.uiHeight-5);
     let engine = new Engine(player, eventHandler, display, hpBar, messages, new InfoLine(0, conf.dungeonHeight, conf.width), new InfoLine(0, conf.dungeonHeight+2, conf.width));
 

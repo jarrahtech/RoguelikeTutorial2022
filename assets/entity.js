@@ -75,7 +75,8 @@ export class EntityFactory {
                 }],
                 [EntityComponents.Inventory, function() {
                     this.capacity = 26;
-                }]
+                }],
+                [EntityComponents.Level]
             ]
         }, 
         corpse: {
@@ -100,6 +101,9 @@ export class EntityFactory {
                     this.maxHp = this.currHp = 10;
                     this.defense = 0;
                     this.power = 3;
+                }],
+                [EntityComponents.XP, function() {
+                    this.xp = 35;
                 }]
             ]
         }, 
@@ -116,6 +120,9 @@ export class EntityFactory {
                     this.maxHp = this.currHp = 16;
                     this.defense = 1;
                     this.power = 4;
+                }],
+                [EntityComponents.XP, function() {
+                    this.xp = 100;
                 }]
             ]
         },
@@ -228,6 +235,9 @@ const EntityComponents = {
                 this.engine().eventHandler = new NoEventHandler();
             } else {
                 this.engine().messages.addMessage(`${this.name} dies`, enemyDie);
+                if (this.engine().player.addXP && this.xp) {
+                    this.engine().player.addXP(this.xp);
+                }
             }
             this.location.map.corpsify(this);
         }
@@ -285,7 +295,7 @@ const EntityComponents = {
             this.items.splice(this.items.indexOf(item), 1);
         },
         pickup(item) {
-            if (this.items.length+1<this.capacity) {
+            if (this.items.length<this.capacity) {
                 this.location.map.remove(item);
                 this.items.push(item);
                 this.engine().messages.addMessage(`You pickup the ${item.name}.`);
@@ -359,6 +369,51 @@ const EntityComponents = {
             this.action.entity.remove(this);
             return new WaitAction();
         }
+    },
+    XP: {
+        xp: 5
+    },
+    Level: {
+        currentLevel: 1,
+        currentXp: 0,
+        levelUpBase: 200,
+        levelUpFactor: 150,
+        xpNext() {
+            return this.levelUpBase+this.currentLevel*this.levelUpFactor;
+        },
+        requiresLevelUp() {
+            return this.currentXp >= this.xpNext();
+        },
+        addXP(xp) {
+            if (xp === 0 || this.levelUpBase === 0) {
+                return;
+            }
+            this.currentXp += xp
+            this.engine().messages.addMessage(`You gain ${xp} experience points.`)
+
+            if (this.requiresLevelUp()) {
+                this.engine().messages.addMessage(`You advance to level ${this.currentLevel + 1}!`)
+            }
+        },
+        increaseLevel() {
+            this.currentXp -= this.xpNext()
+            this.currentLevel += 1
+        },
+        increaseHp(amount = 20) {
+            this.maxHp += amount
+            this.currHp += amount
+            this.engine().messages.addMessage("Your health improves!")
+            this.increaseLevel()
+        },
+        increasePower(amount = 1) {
+            this.power += amount
+            this.engine().messages.addMessage("You feel stronger!")
+            this.increaseLevel()
+        },
+        increaseDefense(amount = 1) {
+            this.defense += amount
+            this.engine().messages.addMessage("Your movements are getting swifter!")
+            this.increaseLevel()
+        }
     }
 };
-

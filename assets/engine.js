@@ -4,6 +4,7 @@ import * as color from "./color.js";
 import { GameMap } from './map.js';
 import { ImpossibleException } from "./exceptions.js";
 import { conf } from "./game.js"
+import { LevelUpEventHandler } from "./eventHandler.js";
 
 export class Engine {
     constructor(player, eventHandler, display, hpBar, messages, info, level) {
@@ -45,8 +46,12 @@ export class Engine {
             switch (inputType) {
                 case 'keydown': const action = this.eventHandler.dispatch(this.player, inputData);
                                 if (action.perform()) {
-                                    this.handleEntitiesTurn();
-                                    this.render();
+                                    if (this.player.requiresLevelUp()) {
+                                        this.eventHandler = new LevelUpEventHandler(this.player);
+                                    } else {
+                                        this.handleEntitiesTurn();
+                                        this.render();
+                                    }
                                 }
                                 break;
                 case 'mousemove': this.eventHandler.mouse(this.player, inputData); break;
@@ -71,7 +76,7 @@ export class Engine {
     render() {
         this.display.clear();
         this.gameMap().render(this.display);
-        this.hpBar.render(this.display, this.player.currHp);
+        this.hpBar.render(this.display, this.player.currHp, this.player.maxHp);
         this.messages.render(this.display);
         this.levelLine.show(this.display, "Dungeon Level: "+this.currentLevel);
     }

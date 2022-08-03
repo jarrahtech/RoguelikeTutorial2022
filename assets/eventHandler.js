@@ -94,6 +94,8 @@ export class MainEventHandler extends NoEventHandler {
             return new UseAction(player);
         } else if (inputData.keyCode===ROT.KEYS.VK_SLASH) {
             player.engine().eventHandler = new LookHandler(player)
+        } else if (inputData.keyCode===ROT.KEYS.VK_C) {
+            player.engine().eventHandler = new CharacterScreenHandler(player)
         } 
         return new NullAction(); 
     }  
@@ -122,6 +124,43 @@ export class PlayerListEventHandler {
         } else {
             return toMain(player.engine()); 
         }
+    }
+}
+
+export class LevelUpEventHandler {
+
+    constructor(entity) {
+        this.render(entity);
+    }
+
+    render(player) {
+        let display = player.engine().display;
+        
+        let x = player.location.x<23?24:0;
+        display.drawBox(x, 0, 40, 9, "Level Up");
+        this.draw(display, "Congratulations! You level up!", x, 1)
+        this.draw(display, "Select an attribute to increase.", x, 2)
+        this.draw(display, `a) Constitution (+20 HP, from ${player.maxHp})`, x, 4);
+        this.draw(display, `b) Strength (+1 attack, from ${player.power})`, x, 5);
+        this.draw(display, `c) Agility (+1 defense, from ${player.defense})`, x, 6);
+    }
+
+    draw(display, text, x, y) {
+        for (let j=0; j<text.length; j++) {
+            display.drawOver(x+1+j, y, text[j], 'white', null);
+        }
+    }
+
+    mouse(player, inputData) { }
+
+    dispatch(player, inputData) {
+        switch (inputData.key.charCodeAt(0)-"a".charCodeAt(0)) {
+            case 0: player.increaseHp(); break;
+            case 1: player.increasePower(); break;
+            case 2: player.increaseDefense(); break;
+            default: throw new ImpossibleException("Invalid entry.");
+        }
+        return toMain(player.engine(), true); 
     }
 }
 
@@ -276,5 +315,36 @@ export class AreaRangedAttackHandler extends SelectIndexHandler {
     selected(player) {
         toMain(player.engine(), true);
         return this.callback(this.mouseLocation)
+    }
+}
+
+class CharacterScreenHandler {
+    constructor(entity) {
+        console.log(":ASDF")
+        this.render(entity);
+    }
+
+    render(player) {
+        let display = player.engine().display;
+        
+        let x = player.location.x<25?25:0;
+        display.drawBox(x, 0, 30, 8, "Character Information");
+        this.draw(display, `Level: ${player.currentLevel}`, x, 2);
+        this.draw(display, `XP: ${player.currentXp}`, x, 3);
+        this.draw(display, `XP for next level: ${player.xpNext()}`, x, 4);
+        this.draw(display, `Power: ${player.power}`, x, 5);
+        this.draw(display, `Defense: ${player.defense}`, x, 6);
+    }
+
+    draw(display, text, x, y) {
+        for (let j=0; j<text.length; j++) {
+            display.drawOver(x+1+j, y, text[j], 'white', null);
+        }
+    }
+
+    mouse(player, inputData) { }
+
+    dispatch(player, inputData) {
+        return toMain(player.engine()); 
     }
 }
