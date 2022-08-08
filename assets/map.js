@@ -164,6 +164,32 @@ let compareEntityRenderOrder = function(a, b) {
     return a.renderOrder - b.renderOrder;
 }
 
+let entitiesPerRoom = [
+    [0,2],
+    [3,3],
+    [5,5]
+]
+
+let itemsPerFloor = [
+    [0,1],
+    [4,2]
+]
+
+let monsters = [
+    [0, {orc: 4, troll: 1}],
+    [1, {orc: 3, troll: 1}],
+    [3, {orc: 2, troll: 4, giant: 1}],
+    [5, {troll: 2, giant: 1}],
+    [7, {troll: 1, giant: 1, dragon: 1}],
+    [9, {dragon: 1, giant: 2}]
+]
+
+let items = [
+    [0, {healthPotion: 2}, {confusionScroll: 1}],
+    [3, {healthPotion: 2}, {confusionScroll: 1}, {lightningScroll: 1}],
+    [5, {healthPotion: 1}, {confusionScroll: 1}, {lightningScroll: 1}, {fireballScroll: 1}],
+]
+
 export class GameMap {
 
     constructor(level, width, height, player) {
@@ -188,27 +214,32 @@ export class GameMap {
         }
         this.entities = [player];
         this.factory = new EntityFactory();
-        this.placeEntities(2, this.factory);  
+        this.placeEntities(this.maxForFloor(entitiesPerRoom), this.maxForFloor(monsters));  
+        this.placeEntities(this.maxForFloor(itemsPerFloor), this.maxForFloor(items));
         this.entities.sort(compareEntityRenderOrder); 
         this.fov = new ROT.FOV.PreciseShadowcasting((x, y) => { 
             return new Location(x, y, this).isTransparent();
         }, { topology: 8 });
     }
 
-    placeEntities(maxPerRoom, factory) {
-        var monsters = {
-            orc: 4,
-            healthPotion: 1,
-            lightningScroll: 1,
-            confusionScroll: 1,
-            fireballScroll: 1,
-            troll: 1
+    maxForFloor(floorMap) {       
+        let result = 0;
+        for (let [min, val] of floorMap) {
+            if (min > this.level) {
+                break
+            } else {
+                result = val
+            }
         }
+        return result
+    }
+
+    placeEntities(maxPerRoom, entities) {
         this.map.getRooms().forEach(r => {
-            for (let i=this.randInt(0, maxPerRoom-1); i>=0; i--) {
+            for (let i=this.randInt(0, maxPerRoom); i>0; i--) {
                 let location = this.randomRoomPosition(r);
                 if (location.blockingEntity()==null) {
-                    this.add(factory.get(ROT.RNG.getWeightedValue(monsters)), location, false);
+                    this.add(this.factory.get(ROT.RNG.getWeightedValue(entities)), location, false);
                 }
             }
         });

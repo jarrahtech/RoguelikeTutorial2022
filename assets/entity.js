@@ -126,6 +126,44 @@ export class EntityFactory {
                 }]
             ]
         },
+        giant: {
+            name: "Giant",
+            glyph: "G",
+            fg: 'white',
+            bg: inLight,
+            renderOrder: RenderOrder.ACTOR,
+            blocker: true,
+            components: [
+                [EntityComponents.HostileEnemy], 
+                [EntityComponents.Fighter, function() {
+                    this.maxHp = this.currHp = 30;
+                    this.defense = 2;
+                    this.power = 6;
+                }],
+                [EntityComponents.XP, function() {
+                    this.xp = 150;
+                }]
+            ]
+        },
+        dragon: {
+            name: "Dragon",
+            glyph: "D",
+            fg: 'white',
+            bg: inLight,
+            renderOrder: RenderOrder.ACTOR,
+            blocker: true,
+            components: [
+                [EntityComponents.HostileEnemy], 
+                [EntityComponents.Fighter, function() {
+                    this.maxHp = this.currHp = 50;
+                    this.defense = 5;
+                    this.power = 15;
+                }],
+                [EntityComponents.XP, function() {
+                    this.xp = 250;
+                }]
+            ]
+        },
         healthPotion: {
             name: "Health Potion",
             glyph: "!",
