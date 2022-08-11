@@ -4,4 +4,14 @@ A vanilla [Javascript](https://javascript.info/) implementation of the [/r/rogue
 
 ## [Playable version](https://jarrahtech.github.io/RoguelikeTutorial2022/)
 
+### Controls
+
+* movement/target: arrow keys or wasd (+qezx)
+* look: '/'
+* pickup: 'p'
+* message history: 'v'
+* drop/leave: 'l'
+* activate/use/equip: 'u'
+* character screen: 'c'
+
 ![/r/roguelikedev Tutorial2022 Logo](/assets/img/logo.png)
