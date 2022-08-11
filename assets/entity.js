@@ -12,6 +12,12 @@ const RenderOrder = {
 };
 Object.freeze(RenderOrder);
 
+const EquipmentType = {
+    WEAPON: 1,
+    ARMOR: 2
+};
+Object.freeze(EquipmentType);
+
 const directions = [
     [-1, -1],  
     [0, -1], 
@@ -32,6 +38,12 @@ class Entity {
         this.name = name
         this.renderOrder = renderOrder
         this.blocker = blocker
+    }
+
+    addMessage(msg) {
+        if (this.location) {
+            this.engine().messages.addMessage(msg);
+        }
     }
 
     engine() {
@@ -70,13 +82,14 @@ export class EntityFactory {
             components: [
                 [EntityComponents.Fighter, function() {
                     this.maxHp = this.currHp = 30;
-                    this.defense = 2;
-                    this.power = 5;
+                    this.defense = 1;
+                    this.power = 2;
                 }],
                 [EntityComponents.Inventory, function() {
                     this.capacity = 26;
                 }],
-                [EntityComponents.Level]
+                [EntityComponents.Level],
+                [EntityComponents.Equipment]
             ]
         }, 
         corpse: {
@@ -199,6 +212,54 @@ export class EntityFactory {
             bg: inLight,
             renderOrder: RenderOrder.ITEM,
             components: [[EntityComponents.FireballConsumable]]
+        },
+        dagger: {
+            glyph: "/", 
+            fg: "#00b0ff",
+            name: "Dagger", 
+            blocker: false,
+            bg: inLight,
+            renderOrder: RenderOrder.ITEM,
+            components: [[EntityComponents.Equippable, function() {
+                this.type = EquipmentType.WEAPON;
+                this.power = 2;
+            }]]
+        },
+        sword: {
+            glyph: "/", 
+            fg: "#00b0ff",
+            name: "Sword", 
+            blocker: false,
+            bg: inLight,
+            renderOrder: RenderOrder.ITEM,
+            components: [[EntityComponents.Equippable, function() {
+                this.type = EquipmentType.WEAPON;
+                this.power = 4;
+            }]]
+        },
+        leatherArmor: {
+            glyph: "[", 
+            fg: "#703014",
+            name: "Leather Armor", 
+            blocker: false,
+            bg: inLight,
+            renderOrder: RenderOrder.ITEM,
+            components: [[EntityComponents.Equippable, function() {
+                this.type = EquipmentType.ARMOR;
+                this.power = 1;
+            }]]
+        },
+        chainmail: {
+            glyph: "[", 
+            fg: "#703014",
+            name: "Chain Mail", 
+            blocker: false,
+            bg: inLight,
+            renderOrder: RenderOrder.ITEM,
+            components: [[EntityComponents.Equippable, function() {
+                this.type = EquipmentType.ARMOR;
+                this.power = 3;
+            }]]
         }
     };
 
@@ -325,7 +386,10 @@ const EntityComponents = {
         items: [],
         drop(item) {
             this.remove(item);
-            item.location.map.add(item, this.location);
+            this.location.map.add(item, this.location);
+            if (item===this.armor || item===this.weapon) {
+                item.unequip(this);
+            }
             this.engine().messages.addMessage(`You dropped the ${item.name}.`);
             return true;
         },
@@ -334,9 +398,11 @@ const EntityComponents = {
         },
         pickup(item) {
             if (this.items.length<this.capacity) {
-                this.location.map.remove(item);
+                if (this.location) {
+                    this.location.map.remove(item);
+                }
                 this.items.push(item);
-                this.engine().messages.addMessage(`You pickup the ${item.name}.`);
+                this.addMessage(`You pickup the ${item.name}.`);
             } else {
                 throw new ImpossibleException("You are carrying too much already!")
             }   
@@ -410,6 +476,80 @@ const EntityComponents = {
     },
     XP: {
         xp: 5
+    },
+    Equipment: {
+        armor: undefined,
+        weapon: undefined
+    },
+    Equippable: {
+        type: EquipmentType.WEAPON,
+        power: 1,
+        postfix: " (E)",
+        activate(action) {
+            switch (this.type) {
+                case EquipmentType.WEAPON: 
+                    if (action.entity.weapon===this) {
+                        throw new ImpossibleException("Already equipped!")
+                    } else {
+                        return this.equip(action.entity)
+                    }
+                    break;
+                case EquipmentType.ARMOR:
+                    if (action.entity.armor===this) {
+                        throw new ImpossibleException("Already equipped!")
+                    } else {
+                        return this.equip(action.entity)
+                    }
+                    break;
+            }          
+        }, 
+        equip(equipper) {
+            switch (this.type) {
+                case EquipmentType.WEAPON: 
+                    if (equipper.weapon!=undefined) {
+                        equipper.weapon.unequip(equipper)    
+                    }
+                    equipper.weapon = this;
+                    equipper.power += this.power;
+                    this.addMessage(`You have equipped the ${this.name}`);
+                    this.addMessage("You feel more powerful");
+                    break;
+                case EquipmentType.ARMOR: 
+                    if (equipper.armor!=undefined) {
+                        equipper.armor.unequip(equipper)    
+                    }
+                    equipper.armor = this;
+                    equipper.defense += this.power;
+                    this.addMessage(`You have equipped the ${this.name}`);
+                    this.addMessage("You feel more secure");
+                    break;
+            }
+            this.name += this.postfix; 
+            return true;
+        },
+        unequip(equipper) {
+            this.name = this.name.replace(this.postfix, ""); 
+            switch (this.type) {
+                case EquipmentType.WEAPON: 
+                    if (equipper.weapon==undefined) {
+                        throw new ImpossibleException("You do not have that equipped!")
+                    }
+                    equipper.power -= this.power;
+                    equipper.weapon = undefined;
+                    equipper.addMessage(`You remove the ${this.name}`);
+                    equipper.addMessage("You feel less powerful");
+                    break;
+                case EquipmentType.ARMOR: 
+                    if (equipper.armor==undefined) {
+                        throw new ImpossibleException("You do not have that equipped!")
+                    }
+                    equipper.defense -= this.power;
+                    equipper.armor = undefined;
+                    equipper.addMessage(`You remove the ${this.name}`);
+                    equipper.addMessage("You feel less secure");
+                    break;
+            }
+        }
     },
     Level: {
         currentLevel: 1,

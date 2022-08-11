@@ -19,15 +19,25 @@ export const conf = {
 }
 
 window.onload = function() {
-    conf.init();
+    conf.init();   
     let display = new ROT.Display(conf);
+
+    let factory = new EntityFactory()
     let player = new EntityFactory().get("player");
+    let dagger = factory.get("dagger");
+    player.pickup(dagger)
+    dagger.equip(player);
+    let leathers = factory.get("leatherArmor");
+    player.pickup(leathers)
+    leathers.equip(player);
+
     let eventHandler = new MainEventHandler();
     let hpBar = new HpBar(conf.width/4, conf.dungeonHeight+3, conf.width/2);
     let messages = new MessageLog(2, conf.dungeonHeight+5, conf.width-4, conf.uiHeight-5);
     let engine = new Engine(player, eventHandler, display, hpBar, messages, new InfoLine(0, conf.dungeonHeight, conf.width), new InfoLine(0, conf.dungeonHeight+2, conf.width));
 
     engine.messages.addMessage("Hello and welcome, adventurer, to yet another dungeon!", welcome);
+    
 
     let bindEventToScreen = function(event) {
         window.addEventListener(event, function(e) {

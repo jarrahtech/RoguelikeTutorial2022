@@ -176,18 +176,18 @@ let itemsPerFloor = [
 ]
 
 let monsters = [
-    [0, {orc: 4, troll: 1}],
+    [0, {orc: 5, troll: 1}],
     [1, {orc: 3, troll: 1}],
-    [3, {orc: 2, troll: 4, giant: 1}],
-    [5, {troll: 2, giant: 1}],
+    [3, {orc: 2, troll: 3, giant: 1}],
+    [5, {troll: 1, giant: 1}],
     [7, {troll: 1, giant: 1, dragon: 1}],
-    [9, {dragon: 1, giant: 2}]
+    [9, {dragon: 1, giant: 1}]
 ]
 
 let items = [
-    [0, {healthPotion: 2}, {confusionScroll: 1}],
-    [3, {healthPotion: 2}, {confusionScroll: 1}, {lightningScroll: 1}],
-    [5, {healthPotion: 1}, {confusionScroll: 1}, {lightningScroll: 1}, {fireballScroll: 1}],
+    [0, {healthPotion: 1, confusionScroll: 1}],
+    [3, {healthPotion: 1, confusionScroll: 1, lightningScroll: 1, sword: 1}],
+    [5, {healthPotion: 1, confusionScroll: 1, lightningScroll: 1, fireballScroll: 1, chainmail: 1}],
 ]
 
 export class GameMap {
